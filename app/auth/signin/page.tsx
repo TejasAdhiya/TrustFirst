@@ -26,7 +26,32 @@ export default function SignInPage() {
     e.preventDefault()
     setIsLoading(true)
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password)
+      // Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password)
+      const user = userCredential.user
+
+      // Check/update user in MongoDB
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || user.email?.split('@')[0],
+          photoURL: user.photoURL || '',
+          provider: 'email',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to sync user with database')
+      }
+
+      console.log('✅ User signed in and synced with MongoDB:', data.user)
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Signin error:", error)
@@ -51,7 +76,31 @@ export default function SignInPage() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true)
-      await signInWithPopup(auth, googleProvider)
+      const result = await signInWithPopup(auth, googleProvider)
+      const user = result.user
+
+      // Save/update user in MongoDB
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || user.email?.split('@')[0],
+          photoURL: user.photoURL || '',
+          provider: 'google',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save user to database')
+      }
+
+      console.log('✅ Google user signed in and synced with MongoDB:', data.user)
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Google login error:", error)

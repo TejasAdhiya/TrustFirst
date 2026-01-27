@@ -28,7 +28,33 @@ export default function SignUpPage() {
     e.preventDefault()
     setIsLoading(true)
     try {
-      await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      // Create user in Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      const user = userCredential.user
+
+      // Save user to MongoDB
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          name: formData.name,
+          phone: formData.phone,
+          photoURL: user.photoURL || '',
+          provider: 'email',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save user to database')
+      }
+
+      console.log('✅ User saved to MongoDB:', data.user)
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Signup error:", error)
@@ -53,7 +79,31 @@ export default function SignUpPage() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true)
-      await signInWithPopup(auth, googleProvider)
+      const result = await signInWithPopup(auth, googleProvider)
+      const user = result.user
+
+      // Save user to MongoDB
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || user.email?.split('@')[0],
+          photoURL: user.photoURL || '',
+          provider: 'google',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save user to database')
+      }
+
+      console.log('✅ Google user saved to MongoDB:', data.user)
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Google login error:", error)
