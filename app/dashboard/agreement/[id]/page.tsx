@@ -113,33 +113,48 @@ export default function AgreementDetailPage({
     setIsCallingBorrower(true)
     const newMessage = {
       role: "system",
-      content: `Connecting to Vapi AI... Calling ${agreement.borrowerName}...`,
+      content: `Connecting to AI mediator... Calling ${agreement.borrowerName}...`,
       timestamp: new Date().toISOString(),
     }
     setAiMessages((prev) => [...prev, newMessage])
 
-    // Simulate AI call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    const responseMessage = {
-      role: "ai",
-      content: `I spoke with ${agreement.borrowerName}. They confirmed they are aware of the upcoming payment due on ${new Date(agreement.dueDate).toLocaleDateString()} and plan to transfer the amount by then.`,
-      timestamp: new Date().toISOString(),
-    }
-    setAiMessages((prev) => [...prev, responseMessage])
-    setIsCallingBorrower(false)
-
-    // Update agreement with new AI messages
     try {
-      await fetch(`/api/agreements/${id}`, {
-        method: "PATCH",
+      // Call the AI call endpoint which triggers Make.com webhook
+      const response = await fetch(`/api/agreements/${id}/ask-ai-call`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          aiMessages: [...aiMessages, newMessage, responseMessage],
-        }),
       })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        const successMessage = {
+          role: "system",
+          content: `AI mediator call initiated successfully for ${agreement.borrowerName}. The call will be processed shortly.`,
+          timestamp: new Date().toISOString(),
+        }
+        setAiMessages((prev) => [...prev, successMessage])
+        
+        // Refresh agreement to get updated timeline and messages
+        await fetchAgreement()
+      } else {
+        const errorMessage = {
+          role: "system",
+          content: `Failed to initiate AI call: ${data.error || 'Unknown error'}`,
+          timestamp: new Date().toISOString(),
+        }
+        setAiMessages((prev) => [...prev, errorMessage])
+      }
     } catch (error) {
-      console.error("Error saving AI messages:", error)
+      console.error("Error triggering AI call:", error)
+      const errorMessage = {
+        role: "system",
+        content: `Error connecting to AI mediator. Please try again.`,
+        timestamp: new Date().toISOString(),
+      }
+      setAiMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsCallingBorrower(false)
     }
   }
 
