@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -25,6 +25,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
+import { auth } from "@/firebase"
+import { onAuthStateChanged } from "firebase/auth"
 
 const steps = [
   { id: 1, title: "Loan Details", icon: FileText },
@@ -37,6 +39,19 @@ export default function CreateAgreementPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user)
+      } else {
+        router.push("/auth/signin")
+      }
+    })
+
+    return () => unsubscribe()
+  }, [router])
 
   const [formData, setFormData] = useState({
     borrowerName: "",
@@ -90,11 +105,63 @@ export default function CreateAgreementPage() {
   }
 
   const handleSubmit = async () => {
+    if (!currentUser) {
+      alert("Please sign in to create an agreement")
+      return
+    }
+
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsSubmitting(false)
-    router.push("/dashboard")
+
+    try {
+      const agreementData = {
+        lenderId: currentUser.uid,
+        lenderName: currentUser.displayName || currentUser.email?.split("@")[0] || "User",
+        lenderEmail: currentUser.email,
+        borrowerName: formData.borrowerName,
+        borrowerEmail: formData.borrowerEmail,
+        borrowerPhone: formData.borrowerPhone,
+        amount: parseFloat(formData.amount),
+        purpose: formData.purpose,
+        dueDate: formData.returnDate,
+        bufferDays: formData.bufferDays,
+        witnessName: formData.witnessName,
+        witnessEmail: formData.witnessEmail,
+        witnessPhone: formData.witnessPhone,
+        proofFile: formData.proofFile
+          ? {
+              fileName: formData.proofFile.name,
+              fileUrl: "/placeholder-proof.jpg", // In production, upload to storage
+            }
+          : undefined,
+      }
+
+      const response = await fetch("/api/agreements", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(agreementData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        router.push("/dashboard")
+      } else {
+        // Show user-friendly error message
+        if (data.message) {
+          alert(data.message)
+        } else {
+          alert(`Failed to create agreement: ${data.error}`)
+        }
+        setIsSubmitting(false)
+      }
+    } catch (error) {
+      console.error("Error creating agreement:", error)
+      alert("Failed to create agreement. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const isStepValid = () => {

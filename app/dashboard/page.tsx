@@ -1,6 +1,8 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Plus,
   ArrowUpRight,
@@ -12,70 +14,21 @@ import {
   Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { auth } from "@/firebase"
+import { onAuthStateChanged } from "firebase/auth"
 
-// Mock data with realistic examples
-const agreements = [
-  {
-    id: "1",
-    personName: "Sarah Chen",
-    personInitials: "SC",
-    amount: 2500,
-    type: "lent",
-    purpose: "Rent for March",
-    dueDate: "2026-02-15",
-    status: "active",
-    witnessApproved: true,
-    daysUntilDue: 19,
-  },
-  {
-    id: "2",
-    personName: "Mike Johnson",
-    personInitials: "MJ",
-    amount: 850,
-    type: "borrowed",
-    purpose: "Dinner at Chillis",
-    dueDate: "2026-01-30",
-    status: "pending_witness",
-    witnessApproved: false,
-    daysUntilDue: 3,
-  },
-  {
-    id: "3",
-    personName: "Emily Davis",
-    personInitials: "ED",
-    amount: 1200,
-    type: "lent",
-    purpose: "Emergency Car Repair",
-    dueDate: "2026-02-28",
-    status: "active",
-    witnessApproved: true,
-    daysUntilDue: 32,
-  },
-  {
-    id: "4",
-    personName: "Alex Rodriguez",
-    personInitials: "AR",
-    amount: 500,
-    type: "lent",
-    purpose: "Medical Bills",
-    dueDate: "2026-01-25",
-    status: "reviewing",
-    witnessApproved: true,
-    daysUntilDue: -2,
-  },
-  {
-    id: "5",
-    personName: "Jordan Lee",
-    personInitials: "JL",
-    amount: 3000,
-    type: "borrowed",
-    purpose: "Business Investment",
-    dueDate: "2026-03-15",
-    status: "settled",
-    witnessApproved: true,
-    daysUntilDue: 47,
-  },
-]
+interface Agreement {
+  _id: string
+  borrowerName: string
+  lenderName: string
+  amount: number
+  type: "lent" | "borrowed"
+  purpose?: string
+  dueDate: string
+  status: "active" | "pending_witness" | "reviewing" | "settled" | "overdue"
+  witnessApproved: boolean
+  lenderId: string
+}
 
 const statusConfig = {
   active: {
@@ -101,6 +54,68 @@ const statusConfig = {
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const [agreements, setAgreements] = useState<Agreement[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUserId(user.uid)
+        await fetchAgreements(user.uid)
+      } else {
+        router.push("/auth/signin")
+      }
+    })
+
+    return () => unsubscribe()
+  }, [router])
+
+  const fetchAgreements = async (userId: string) => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/agreements?userId=${userId}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        // Map agreements to include proper type based on current user
+        const mappedAgreements = (data.agreements || []).map((agreement: any) => {
+          // Determine if current user is lender or borrower
+          const isLender = agreement.lenderId === userId
+          return {
+            ...agreement,
+            type: isLender ? "lent" : "borrowed",
+          }
+        })
+        setAgreements(mappedAgreements)
+      } else {
+        console.error("Failed to fetch agreements:", data.error)
+      }
+    } catch (error) {
+      console.error("Error fetching agreements:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const calculateDaysUntilDue = (dueDate: string) => {
+    const due = new Date(dueDate)
+    const today = new Date()
+    const diffTime = due.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
+  const getPersonInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   const totalLent = agreements
     .filter((a) => a.type === "lent" && a.status !== "settled")
     .reduce((sum, a) => sum + a.amount, 0)
@@ -110,6 +125,19 @@ export default function DashboardPage() {
     .reduce((sum, a) => sum + a.amount, 0)
 
   const activeAgreements = agreements.filter((a) => a.status !== "settled")
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+            <p className="text-muted-foreground">Loading agreements...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
@@ -175,76 +203,97 @@ export default function DashboardPage() {
       </div>
 
       <div className="space-y-3">
-        {activeAgreements.map((agreement) => {
-          const config = statusConfig[agreement.status as keyof typeof statusConfig]
-          const StatusIcon = config.icon
+        {activeAgreements.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary mb-4">
+              <Plus className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-lg mb-1">No Active Agreements</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create your first trust agreement to get started
+            </p>
+            <Link href="/dashboard/create">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Agreement
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          activeAgreements.map((agreement) => {
+            const config = statusConfig[agreement.status as keyof typeof statusConfig]
+            const StatusIcon = config.icon
+            const daysUntilDue = calculateDaysUntilDue(agreement.dueDate)
+            const personName = agreement.type === "lent" ? agreement.borrowerName : agreement.lenderName
+            const personInitials = getPersonInitials(personName)
 
-          return (
-            <Link
-              key={agreement.id}
-              href={`/dashboard/agreement/${agreement.id}`}
-              className="block"
-            >
-              <div className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:bg-card/80">
-                <div className="flex items-start gap-4">
-                  {/* Avatar */}
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold ${
-                      agreement.type === "lent"
-                        ? "bg-primary/20 text-primary"
-                        : "bg-orange/20 text-orange"
-                    }`}
-                  >
-                    {agreement.personInitials}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold truncate">{agreement.personName}</h3>
-                      {!agreement.witnessApproved && (
-                        <Users className="h-4 w-4 text-orange" />
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {agreement.purpose}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${config.color}`}
-                      >
-                        <StatusIcon className="h-3 w-3" />
-                        {config.label}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {agreement.daysUntilDue > 0
-                          ? `${agreement.daysUntilDue} days left`
-                          : agreement.daysUntilDue === 0
-                          ? "Due today"
-                          : `${Math.abs(agreement.daysUntilDue)} days overdue`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Amount */}
-                  <div className="text-right">
+            return (
+              <Link
+                key={agreement._id}
+                href={`/dashboard/agreement/${agreement._id}`}
+                className="block"
+              >
+                <div className="group rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:bg-card/80">
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
                     <div
-                      className={`text-lg font-bold ${
-                        agreement.type === "lent" ? "text-primary" : "text-orange"
+                      className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold ${
+                        agreement.type === "lent"
+                          ? "bg-primary/20 text-primary"
+                          : "bg-orange/20 text-orange"
                       }`}
                     >
-                      {agreement.type === "lent" ? "+" : "-"}${agreement.amount.toLocaleString()}
+                      {personInitials}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {agreement.type === "lent" ? "To receive" : "To pay"}
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold truncate">{personName}</h3>
+                        {!agreement.witnessApproved && (
+                          <Users className="h-4 w-4 text-orange" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {agreement.purpose || "No purpose specified"}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${config.color}`}
+                        >
+                          <StatusIcon className="h-3 w-3" />
+                          {config.label}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {daysUntilDue > 0
+                            ? `${daysUntilDue} days left`
+                            : daysUntilDue === 0
+                            ? "Due today"
+                            : `${Math.abs(daysUntilDue)} days overdue`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-right">
+                      <div
+                        className={`text-lg font-bold ${
+                          agreement.type === "lent" ? "text-primary" : "text-orange"
+                        }`}
+                      >
+                        {agreement.type === "lent" ? "+" : "-"}${agreement.amount.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {agreement.type === "lent" ? "To receive" : "To pay"}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          )
-        })}
+              </Link>
+            )
+          })
+        )}
       </div>
 
       {/* Settled Section */}
@@ -256,38 +305,43 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {agreements
               .filter((a) => a.status === "settled")
-              .map((agreement) => (
-                <Link
-                  key={agreement.id}
-                  href={`/dashboard/agreement/${agreement.id}`}
-                  className="block"
-                >
-                  <div className="group rounded-xl border border-border/50 bg-card/50 p-4 transition-all hover:border-border hover:bg-card">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
-                        {agreement.personInitials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-muted-foreground truncate">
-                          {agreement.personName}
-                        </h3>
-                        <p className="text-sm text-muted-foreground/70 truncate">
-                          {agreement.purpose}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-muted-foreground">
-                          ${agreement.amount.toLocaleString()}
+              .map((agreement) => {
+                const personName = agreement.type === "lent" ? agreement.borrowerName : agreement.lenderName
+                const personInitials = getPersonInitials(personName)
+
+                return (
+                  <Link
+                    key={agreement._id}
+                    href={`/dashboard/agreement/${agreement._id}`}
+                    className="block"
+                  >
+                    <div className="group rounded-xl border border-border/50 bg-card/50 p-4 transition-all hover:border-border hover:bg-card">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
+                          {personInitials}
                         </div>
-                        <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Settled
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-muted-foreground truncate">
+                            {personName}
+                          </h3>
+                          <p className="text-sm text-muted-foreground/70 truncate">
+                            {agreement.purpose || "No purpose specified"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-muted-foreground">
+                            ${agreement.amount.toLocaleString()}
+                          </div>
+                          <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Settled
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
           </div>
         </>
       )}

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   User,
@@ -16,6 +17,8 @@ import {
   Star,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { auth } from "@/firebase"
+import { onAuthStateChanged, signOut } from "firebase/auth"
 
 const menuItems = [
   {
@@ -51,17 +54,75 @@ const menuItems = [
 ]
 
 export default function ProfilePage() {
-  const [user] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
-    initials: "JD",
-    trustScore: 92,
-    totalLent: 8500,
-    totalBorrowed: 1200,
-    agreementCount: 12,
-    memberSince: "January 2025",
-  })
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        await fetchUserData(firebaseUser.uid)
+      } else {
+        router.push("/auth/signin")
+      }
+    })
+
+    return () => unsubscribe()
+  }, [router])
+
+  const fetchUserData = async (uid: string) => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/users/${uid}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setUser(data.user)
+      } else {
+        console.error("Failed to fetch user:", data.error)
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth)
+      router.push("/")
+    } catch (error) {
+      console.error("Sign out error:", error)
+    }
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const getMemberSince = (createdAt: string) => {
+    const date = new Date(createdAt)
+    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+  }
+
+  if (loading || !user) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-6 lg:px-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+            <p className="text-muted-foreground">Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 lg:px-6">
@@ -70,7 +131,7 @@ export default function ProfilePage() {
         <div className="flex items-start gap-4">
           <div className="relative">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/20 text-2xl font-bold text-primary">
-              {user.initials}
+              {getInitials(user.name)}
             </div>
             <button className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
               <Edit2 className="h-4 w-4" />
@@ -84,7 +145,7 @@ export default function ProfilePage() {
             </div>
             <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
               <Phone className="h-4 w-4" />
-              {user.phone}
+              {user.phone || "No phone number"}
             </div>
           </div>
         </div>
@@ -100,7 +161,7 @@ export default function ProfilePage() {
           </div>
           <div className="ml-auto text-right">
             <div className="text-xs text-muted-foreground">Member since</div>
-            <div className="text-sm font-medium">{user.memberSince}</div>
+            <div className="text-sm font-medium">{getMemberSince(user.createdAt)}</div>
           </div>
         </div>
       </div>
@@ -147,15 +208,14 @@ export default function ProfilePage() {
       </div>
 
       {/* Sign Out */}
-      <Link href="/">
-        <Button
-          variant="outline"
-          className="w-full h-14 bg-transparent border-destructive/30 text-destructive hover:bg-destructive/10"
-        >
-          <LogOut className="mr-2 h-5 w-5" />
-          Sign Out
-        </Button>
-      </Link>
+      <Button
+        onClick={handleSignOut}
+        variant="outline"
+        className="w-full h-14 bg-transparent border-destructive/30 text-destructive hover:bg-destructive/10"
+      >
+        <LogOut className="mr-2 h-5 w-5" />
+        Sign Out
+      </Button>
     </div>
   )
 }

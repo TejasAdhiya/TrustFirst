@@ -2,7 +2,8 @@
 
 import React from "react"
 
-import { useState, use } from "react"
+import { useState, use, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft,
@@ -28,127 +29,211 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-
-// Mock agreement data
-const mockAgreement = {
-  id: "1",
-  borrowerName: "Sarah Chen",
-  borrowerEmail: "sarah@example.com",
-  borrowerPhone: "+1 (555) 234-5678",
-  borrowerInitials: "SC",
-  amount: 2500,
-  purpose: "Rent for March",
-  createdDate: "2026-01-15",
-  dueDate: "2026-02-15",
-  status: "active",
-  type: "lent",
-  trustScore: 85,
-  strictMode: false,
-  witnessName: "Michael Brown",
-  witnessEmail: "michael@example.com",
-  witnessApproved: true,
-  timeline: [
-    { event: "Agreement Created", date: "2026-01-15", completed: true },
-    { event: "Witness Approved", date: "2026-01-16", completed: true },
-    { event: "Money Sent", date: "2026-01-17", completed: true },
-    { event: "Payment Received", date: null, completed: false },
-  ],
-  lenderProof: {
-    fileName: "bank_transfer_jan15.png",
-    uploadedAt: "2026-01-17",
-  },
-  borrowerProof: null,
-  aiMessages: [
-    {
-      id: "1",
-      role: "system",
-      content: "Setu AI Mediator is ready to help with this agreement.",
-      timestamp: "2026-01-15",
-    },
-  ],
-}
+import { auth } from "@/firebase"
+import { onAuthStateChanged } from "firebase/auth"
 
 export default function AgreementDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
+  const router = useRouter()
   const { id } = use(params)
-  const [agreement, setAgreement] = useState(mockAgreement)
-  const [isStrictMode, setIsStrictMode] = useState(agreement.strictMode)
+  const [agreement, setAgreement] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isStrictMode, setIsStrictMode] = useState(false)
   const [showAIChat, setShowAIChat] = useState(false)
   const [aiMessage, setAiMessage] = useState("")
-  const [aiMessages, setAiMessages] = useState(agreement.aiMessages)
+  const [aiMessages, setAiMessages] = useState<any[]>([])
   const [isCallingBorrower, setIsCallingBorrower] = useState(false)
 
-  // Simulate current user is the lender
-  const isLender = agreement.type === "lent"
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUserId(user.uid)
+        await fetchAgreement()
+      } else {
+        router.push("/auth/signin")
+      }
+    })
 
-  const daysUntilDue = Math.ceil(
-    (new Date(agreement.dueDate).getTime() - new Date().getTime()) /
-      (1000 * 60 * 60 * 24)
-  )
+    return () => unsubscribe()
+  }, [router, id])
 
-  const handleStrictModeToggle = (checked: boolean) => {
+  const fetchAgreement = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/agreements/${id}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setAgreement(data.agreement)
+        setIsStrictMode(data.agreement.strictMode)
+        setAiMessages(data.agreement.aiMessages || [])
+      } else {
+        console.error("Failed to fetch agreement:", data.error)
+        router.push("/dashboard")
+      }
+    } catch (error) {
+      console.error("Error fetching agreement:", error)
+      router.push("/dashboard")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Determine user role
+  const isLender = agreement?.lenderId === currentUserId
+  const isBorrower = agreement?.borrowerId === currentUserId
+  const isWitness = agreement?.witnessEmail && auth.currentUser?.email === agreement.witnessEmail
+
+  const daysUntilDue = agreement
+    ? Math.ceil(
+        (new Date(agreement.dueDate).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
+    : 0
+
+  const handleStrictModeToggle = async (checked: boolean) => {
     setIsStrictMode(checked)
-    setAgreement((prev) => ({ ...prev, strictMode: checked }))
+    try {
+      await fetch(`/api/agreements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ strictMode: checked }),
+      })
+      setAgreement((prev: any) => ({ ...prev, strictMode: checked }))
+    } catch (error) {
+      console.error("Error updating strict mode:", error)
+    }
   }
 
   const handleAICall = async () => {
     setIsCallingBorrower(true)
-    setAiMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        role: "system",
-        content: `Connecting to Vapi AI... Calling ${agreement.borrowerName}...`,
-        timestamp: new Date().toISOString(),
-      },
-    ])
+    const newMessage = {
+      role: "system",
+      content: `Connecting to Vapi AI... Calling ${agreement.borrowerName}...`,
+      timestamp: new Date().toISOString(),
+    }
+    setAiMessages((prev) => [...prev, newMessage])
 
     // Simulate AI call
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    setAiMessages((prev) => [
-      ...prev,
-      {
-        id: (Date.now() + 1).toString(),
-        role: "ai",
-        content: `I spoke with ${agreement.borrowerName}. They confirmed they are aware of the upcoming payment due on ${new Date(agreement.dueDate).toLocaleDateString()} and plan to transfer the amount by then.`,
-        timestamp: new Date().toISOString(),
-      },
-    ])
+    const responseMessage = {
+      role: "ai",
+      content: `I spoke with ${agreement.borrowerName}. They confirmed they are aware of the upcoming payment due on ${new Date(agreement.dueDate).toLocaleDateString()} and plan to transfer the amount by then.`,
+      timestamp: new Date().toISOString(),
+    }
+    setAiMessages((prev) => [...prev, responseMessage])
     setIsCallingBorrower(false)
+
+    // Update agreement with new AI messages
+    try {
+      await fetch(`/api/agreements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          aiMessages: [...aiMessages, newMessage, responseMessage],
+        }),
+      })
+    } catch (error) {
+      console.error("Error saving AI messages:", error)
+    }
   }
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!aiMessage.trim()) return
 
-    setAiMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        role: "user",
-        content: aiMessage,
-        timestamp: new Date().toISOString(),
-      },
-    ])
+    const userMessage = {
+      role: "user",
+      content: aiMessage,
+      timestamp: new Date().toISOString(),
+    }
+    setAiMessages((prev) => [...prev, userMessage])
     setAiMessage("")
 
     // Simulate AI response
     setTimeout(() => {
-      setAiMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "ai",
-          content:
-            "I understand your concern. I can reach out to Sarah to discuss the payment timeline. Would you like me to call them now or send a reminder message first?",
-          timestamp: new Date().toISOString(),
-        },
-      ])
+      const aiResponse = {
+        role: "ai",
+        content:
+          "I understand your concern. I can reach out to the borrower to discuss the payment timeline. Would you like me to call them now or send a reminder message first?",
+        timestamp: new Date().toISOString(),
+      }
+      setAiMessages((prev) => [...prev, aiResponse])
+
+      // Update agreement with new AI messages
+      fetch(`/api/agreements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          aiMessages: [...aiMessages, userMessage, aiResponse],
+        }),
+      }).catch((error) => console.error("Error saving AI messages:", error))
     }, 1500)
+  }
+
+  const handleSendReminder = async () => {
+    try {
+      const response = await fetch(`/api/agreements/${id}/send-reminder`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        alert("Payment reminder sent successfully!")
+      } else {
+        alert("Failed to send reminder")
+      }
+    } catch (error) {
+      console.error("Error sending reminder:", error)
+      alert("Failed to send reminder")
+    }
+  }
+
+  const handleWitnessApproval = async () => {
+    try {
+      const response = await fetch(`/api/agreements/${id}/approve-witness`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        alert("Agreement approved successfully!")
+        await fetchAgreement() // Refresh agreement data
+      } else {
+        alert("Failed to approve agreement")
+      }
+    } catch (error) {
+      console.error("Error approving agreement:", error)
+      alert("Failed to approve agreement")
+    }
+  }
+
+  const handleSettleAgreement = async () => {
+    if (!confirm("Are you sure you want to settle and close this agreement? This action cannot be undone.")) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/agreements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "settled" }),
+      })
+
+      if (response.ok) {
+        alert("Agreement settled successfully!")
+        await fetchAgreement() // Refresh agreement data
+        router.push("/dashboard")
+      } else {
+        alert("Failed to settle agreement")
+      }
+    } catch (error) {
+      console.error("Error settling agreement:", error)
+      alert("Failed to settle agreement")
+    }
   }
 
   const getTrustScoreColor = (score: number) => {
@@ -165,6 +250,19 @@ export default function AgreementDetailPage({
     return "stroke-destructive"
   }
 
+  if (loading || !agreement) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+            <p className="text-muted-foreground">Loading agreement...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   console.log("[v0] Agreement ID:", id)
 
   return (
@@ -179,7 +277,7 @@ export default function AgreementDetailPage({
         </Link>
         <div className="flex-1">
           <h1 className="text-xl font-bold">{agreement.borrowerName}</h1>
-          <p className="text-sm text-muted-foreground">{agreement.purpose}</p>
+          <p className="text-sm text-muted-foreground">{agreement.purpose || "No purpose specified"}</p>
         </div>
         <div
           className={`text-2xl font-bold ${
@@ -373,20 +471,39 @@ export default function AgreementDetailPage({
       {/* AI Repayment Plan */}
       <div className="mb-6 rounded-xl border border-border bg-card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">AI Repayment Plan</h2>
+          <h2 className="text-lg font-semibold">Payment Actions</h2>
           <Sparkles className="h-5 w-5 text-primary" />
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Let AI suggest an optimal installment plan based on the amount and
-          timeline.
-        </p>
-        <Button
-          variant="outline"
-          className="w-full h-12 bg-transparent border-primary/30 text-primary hover:bg-primary/10"
-        >
-          <Sparkles className="mr-2 h-4 w-4" />
-          Generate Installment Plan with AI
-        </Button>
+        
+        {isLender && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground mb-4">
+              Send automated payment reminders to the borrower via email.
+            </p>
+            <Button
+              onClick={handleSendReminder}
+              variant="outline"
+              className="w-full h-12 bg-transparent border-orange/30 text-orange hover:bg-orange/10"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Send Payment Reminder Email
+            </Button>
+          </div>
+        )}
+        
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            Let AI suggest an optimal installment plan based on the amount and
+            timeline.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full h-12 bg-transparent border-primary/30 text-primary hover:bg-primary/10"
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            Generate Installment Plan with AI
+          </Button>
+        </div>
       </div>
 
       {/* Proof Gallery */}
@@ -567,21 +684,46 @@ export default function AgreementDetailPage({
 
       {/* Settlement Actions */}
       <div className="space-y-3">
-        {!isLender && (
-          <Button
-            variant="outline"
-            className="w-full h-14 bg-transparent border-primary text-primary hover:bg-primary/10"
+        {/* Witness Approval Button - Only show if user is witness and not yet approved */}
+        {isWitness && !agreement.witnessApproved && (
+          <Button 
+            onClick={handleWitnessApproval}
+            className="w-full h-14 bg-chart-3 text-white hover:bg-chart-3/90"
           >
-            <Upload className="mr-2 h-5 w-5" />
-            Mark as Paid & Upload Proof
+            <Users className="mr-2 h-5 w-5" />
+            Approve as Witness
           </Button>
         )}
 
-        {isLender && (
-          <Button className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90">
+        {/* Borrower Actions - Upload Proof (Future Feature) */}
+        {isBorrower && agreement.status !== "settled" && (
+          <Button
+            variant="outline"
+            className="w-full h-14 bg-transparent border-primary text-primary hover:bg-primary/10"
+            disabled
+          >
+            <Upload className="mr-2 h-5 w-5" />
+            Mark as Paid & Upload Proof (Coming Soon)
+          </Button>
+        )}
+
+        {/* Lender Actions - Settle Agreement */}
+        {isLender && agreement.status !== "settled" && (
+          <Button 
+            onClick={handleSettleAgreement}
+            className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             <CheckCircle2 className="mr-2 h-5 w-5" />
             Settle Up / Close Loan
           </Button>
+        )}
+
+        {/* Show Settled Status */}
+        {agreement.status === "settled" && (
+          <div className="w-full h-14 flex items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <CheckCircle2 className="mr-2 h-5 w-5" />
+            Agreement Settled
+          </div>
         )}
       </div>
     </div>
