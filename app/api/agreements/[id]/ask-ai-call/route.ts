@@ -22,7 +22,23 @@ export async function POST(
     }
 
     // Extract required data
-    const { borrowerName, borrowerPhone, borrowerEmail, lenderName, amount, dueDate, status, trustScore } = agreement;
+    const { 
+      borrowerName, 
+      borrowerPhone, 
+      borrowerEmail, 
+      lenderName, 
+      amount, 
+      purpose,
+      dueDate, 
+      status, 
+      trustScore,
+      type,
+      strictMode,
+      bufferDays,
+      witnessName,
+      witnessApproved,
+      createdAt
+    } = agreement;
 
     // Use email as fallback if phone is missing
     const contactInfo = borrowerPhone || borrowerEmail;
@@ -41,14 +57,61 @@ export async function POST(
       : 0;
     const pendingAmount = totalBorrowed - totalPaid;
 
-    // Generate agreement context string
-    const agreementContext = `Agreement context:
-Borrower has borrowed ${totalBorrowed}.
-Borrower has already paid ${totalPaid}.
-Pending amount is ${pendingAmount}.
-Agreement status is ${status}.
-Trust score is ${trustScore || 100}.
-Tone should remain polite and non-confrontational.`;
+    // Format dates in human-readable format
+    const formatDate = (date: Date) => {
+      return new Date(date).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    };
+
+    // Convert booleans to natural language
+    const strictModeText = strictMode ? 'strict' : 'flexible';
+    const witnessApprovalText = witnessApproved ? 'approved' : 'pending approval';
+
+    // Generate comprehensive agreement context string
+    const agreementContext = `Agreement summary:
+This is a personal lending agreement between two parties.
+
+Borrower details:
+Name: ${borrowerName}
+Phone: ${borrowerPhone || 'Not provided'}
+Email: ${borrowerEmail}
+
+Lender details:
+Name: ${lenderName}
+
+Loan details:
+Total amount borrowed: ${totalBorrowed}
+Purpose of loan: ${purpose || 'Not specified'}
+
+Repayment status:
+Current status: ${status}
+Amount already paid: ${totalPaid}
+Remaining amount: ${pendingAmount}
+
+Important dates:
+Agreement created on: ${formatDate(createdAt)}
+Due date: ${formatDate(dueDate)}
+Buffer period allowed: ${bufferDays || 0} days
+
+Trust and agreement conditions:
+Trust score: ${trustScore || 100}
+Agreement type: ${type}
+Strict mode: ${strictModeText}
+
+Witness information:
+Witness name: ${witnessName || 'Not assigned'}
+Witness approval status: ${witnessApprovalText}
+
+Conversation behavior rules for the AI:
+- You are a neutral mediator.
+- Do not accuse, threaten, or pressure the borrower.
+- Do not mention money amounts unless the borrower asks.
+- Be calm, polite, and respectful.
+- Focus on acknowledgment and clarity.
+- End the call politely if the borrower sounds busy.`;
 
     // Prepare payload for Make.com webhook
     const webhookPayload = {
