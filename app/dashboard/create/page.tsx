@@ -16,7 +16,7 @@ import {
   User,
   Phone,
   Calendar,
-  DollarSign,
+  IndianRupee,
   FileText,
   Users,
 } from "lucide-react"
@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
 import { auth } from "@/firebase"
 import { onAuthStateChanged } from "firebase/auth"
+import { RecentFriendsModal } from "@/components/dashboard/RecentFriendsModal"
 
 const steps = [
   { id: 1, title: "Loan Details", icon: FileText },
@@ -129,9 +130,9 @@ export default function CreateAgreementPage() {
         witnessPhone: formData.witnessPhone,
         proofFile: formData.proofFile
           ? {
-              fileName: formData.proofFile.name,
-              fileUrl: "/placeholder-proof.jpg", // In production, upload to storage
-            }
+            fileName: formData.proofFile.name,
+            fileUrl: "/placeholder-proof.jpg", // In production, upload to storage
+          }
           : undefined,
       }
 
@@ -209,13 +210,12 @@ export default function CreateAgreementPage() {
             <div key={step.id} className="flex items-center">
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${
-                    currentStep > step.id
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : currentStep === step.id
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${currentStep > step.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : currentStep === step.id
                       ? "border-primary bg-primary/20 text-primary"
                       : "border-border bg-card text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   {currentStep > step.id ? (
                     <Check className="h-5 w-5" />
@@ -224,20 +224,18 @@ export default function CreateAgreementPage() {
                   )}
                 </div>
                 <span
-                  className={`mt-2 text-xs font-medium hidden sm:block ${
-                    currentStep >= step.id
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  }`}
+                  className={`mt-2 text-xs font-medium hidden sm:block ${currentStep >= step.id
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                    }`}
                 >
                   {step.title}
                 </span>
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`mx-2 h-0.5 w-8 sm:w-16 lg:w-24 transition-colors ${
-                    currentStep > step.id ? "bg-primary" : "bg-border"
-                  }`}
+                  className={`mx-2 h-0.5 w-8 sm:w-16 lg:w-24 transition-colors ${currentStep > step.id ? "bg-primary" : "bg-border"
+                    }`}
                 />
               )}
             </div>
@@ -255,6 +253,22 @@ export default function CreateAgreementPage() {
                 <User className="h-4 w-4 text-muted-foreground" />
                 Borrower Name
               </Label>
+              <div className="flex justify-end mb-1">
+                {currentUser && (
+                  <RecentFriendsModal
+                    userId={currentUser.uid}
+                    userEmail={currentUser.email}
+                    onSelectFriend={(friend) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        borrowerName: friend.borrowerName,
+                        borrowerEmail: friend.borrowerEmail,
+                        borrowerPhone: friend.borrowerPhone,
+                      }))
+                    }}
+                  />
+                )}
+              </div>
               <Input
                 id="borrowerName"
                 name="borrowerName"
@@ -301,7 +315,7 @@ export default function CreateAgreementPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="amount" className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <IndianRupee className="h-4 w-4 text-muted-foreground" />
                   Amount
                 </Label>
                 <Input
