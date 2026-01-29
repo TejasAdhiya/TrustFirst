@@ -4,7 +4,7 @@ import React from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Plus, User, Bell, Sparkles } from "lucide-react"
+import { Home, Plus, User, Bell, Sparkles, Users } from "lucide-react"
 
 export default function DashboardLayout({
   children,
@@ -16,6 +16,7 @@ export default function DashboardLayout({
   const navItems = [
     { href: "/dashboard", icon: Home, label: "Home" },
     { href: "/dashboard/create", icon: Plus, label: "Create" },
+    { href: "/dashboard/groups", icon: Users, label: "Groups" },
     { href: "/dashboard/notifications", icon: Bell, label: "Alerts" },
     { href: "/dashboard/profile", icon: User, label: "Profile" },
   ]

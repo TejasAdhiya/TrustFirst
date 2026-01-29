@@ -41,6 +41,8 @@ export interface IAgreement extends Document {
     content: string;
     timestamp: Date;
   }>;
+  groupContribution?: boolean; // NEW: Mark if this is from group money request
+  moneyRequestId?: string; // NEW: Link to money request
   createdAt: Date;
   updatedAt: Date;
 }
@@ -160,6 +162,13 @@ const AgreementSchema: Schema = new Schema(
         },
       },
     ],
+    groupContribution: {
+      type: Boolean,
+      default: false,
+    },
+    moneyRequestId: {
+      type: String,
+    },
   },
   {
     timestamps: true,
