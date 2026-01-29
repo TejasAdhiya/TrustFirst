@@ -30,6 +30,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { auth } from "@/firebase"
+import { trackUserLocation } from "@/app/utils/radar"
 import { onAuthStateChanged } from "firebase/auth"
 
 export default function AgreementDetailPage({
@@ -112,13 +113,47 @@ export default function AgreementDetailPage({
   const handleAICall = async () => {
     setIsCallingBorrower(true)
     const newMessage = {
+      id: `system-${Date.now()}`,
       role: "system",
       content: `Connecting to AI mediator... Calling ${agreement.borrowerName}...`,
       timestamp: new Date().toISOString(),
     }
     setAiMessages((prev) => [...prev, newMessage])
 
+    // Start location tracking in background (non-blocking for UI animation)
+    // We await it but we catch errors silently so the call proceeds.
+    const trackAndSaveLocation = async () => {
+      try {
+        console.log("Tracking user location...");
+        const locationData: any = await trackUserLocation(currentUserId || "guest");
+        console.log("Location result:", locationData);
+
+        if (locationData) {
+          await fetch("/api/live-location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              agreementId: id,
+              userId: currentUserId,
+              latitude: locationData.latitude,
+              longitude: locationData.longitude,
+              locationContext: locationData.locationContext || locationData.context,
+            }),
+          });
+          console.log("Location saved to database.");
+        }
+      } catch (locError) {
+        // Silently fail location tracking as per requirement "strictly do NOT block the UI"
+        console.error("Location tracking/saving failed:", locError);
+      }
+    };
+
     try {
+      // Execute location tracking first (or fast enough)
+      // The user requested "before this part after that webhook will connect".
+      // We will await it, but since we have a timeout and IP fallback, it should return reasonably fast (or null).
+      await trackAndSaveLocation();
+
       // Call the AI call endpoint which triggers Make.com webhook
       const response = await fetch(`/api/agreements/${id}/ask-ai-call`, {
         method: "POST",
@@ -129,6 +164,7 @@ export default function AgreementDetailPage({
 
       if (response.ok) {
         const successMessage = {
+          id: `system-success-${Date.now()}`,
           role: "system",
           content: `AI mediator call initiated successfully for ${agreement.borrowerName}. The call will be processed shortly.`,
           timestamp: new Date().toISOString(),
@@ -139,6 +175,7 @@ export default function AgreementDetailPage({
         await fetchAgreement()
       } else {
         const errorMessage = {
+          id: `system-error-${Date.now()}`,
           role: "system",
           content: `Failed to initiate AI call: ${data.error || 'Unknown error'}`,
           timestamp: new Date().toISOString(),
@@ -148,6 +185,7 @@ export default function AgreementDetailPage({
     } catch (error) {
       console.error("Error triggering AI call:", error)
       const errorMessage = {
+        id: `system-conn-error-${Date.now()}`,
         role: "system",
         content: `Error connecting to AI mediator. Please try again.`,
         timestamp: new Date().toISOString(),
@@ -163,6 +201,7 @@ export default function AgreementDetailPage({
     if (!aiMessage.trim()) return
 
     const userMessage = {
+      id: `user-${Date.now()}`,
       role: "user",
       content: aiMessage,
       timestamp: new Date().toISOString(),
@@ -173,6 +212,7 @@ export default function AgreementDetailPage({
     // Simulate AI response
     setTimeout(() => {
       const aiResponse = {
+        id: `ai-${Date.now()}`,
         role: "ai",
         content:
           "I understand your concern. I can reach out to the borrower to discuss the payment timeline. Would you like me to call them now or send a reminder message first?",
@@ -434,12 +474,12 @@ export default function AgreementDetailPage({
         <h2 className="text-lg font-semibold mb-4">Timeline</h2>
         <div className="space-y-4">
           {agreement.timeline.map((item, index) => (
-            <div key={item.event} className="flex items-start gap-4">
+            <div key={`${item.event}-${index}`} className="flex items-start gap-4">
               <div className="flex flex-col items-center">
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full ${item.completed
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground"
                     }`}
                 >
                   {item.completed ? (
@@ -608,18 +648,18 @@ export default function AgreementDetailPage({
           <div className="border-t border-border">
             {/* Chat Messages */}
             <div className="max-h-80 overflow-y-auto p-4 space-y-4">
-              {aiMessages.map((msg) => (
+              {aiMessages.map((msg, index) => (
                 <div
-                  key={msg.id}
+                  key={msg.id || index}
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"
                     }`}
                 >
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : msg.role === "system"
-                          ? "bg-secondary/50 text-muted-foreground"
-                          : "bg-secondary text-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : msg.role === "system"
+                        ? "bg-secondary/50 text-muted-foreground"
+                        : "bg-secondary text-foreground"
                       }`}
                   >
                     {msg.role === "ai" && (
