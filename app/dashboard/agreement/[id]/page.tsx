@@ -90,9 +90,9 @@ export default function AgreementDetailPage({
 
   const daysUntilDue = agreement
     ? Math.ceil(
-        (new Date(agreement.dueDate).getTime() - new Date().getTime()) /
-          (1000 * 60 * 60 * 24)
-      )
+      (new Date(agreement.dueDate).getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24)
+    )
     : 0
 
   const handleStrictModeToggle = async (checked: boolean) => {
@@ -134,7 +134,7 @@ export default function AgreementDetailPage({
           timestamp: new Date().toISOString(),
         }
         setAiMessages((prev) => [...prev, successMessage])
-        
+
         // Refresh agreement to get updated timeline and messages
         await fetchAgreement()
       } else {
@@ -295,11 +295,10 @@ export default function AgreementDetailPage({
           <p className="text-sm text-muted-foreground">{agreement.purpose || "No purpose specified"}</p>
         </div>
         <div
-          className={`text-2xl font-bold ${
-            isLender ? "text-primary" : "text-orange"
-          }`}
+          className={`text-2xl font-bold ${isLender ? "text-primary" : "text-orange"
+            }`}
         >
-          ${agreement.amount.toLocaleString()}
+          ₹{agreement.amount.toLocaleString()}
         </div>
       </div>
 
@@ -321,15 +320,14 @@ export default function AgreementDetailPage({
               })}
             </div>
             <div
-              className={`text-sm ${
-                daysUntilDue > 0 ? "text-primary" : "text-orange"
-              }`}
+              className={`text-sm ${daysUntilDue > 0 ? "text-primary" : "text-orange"
+                }`}
             >
               {daysUntilDue > 0
                 ? `${daysUntilDue} days remaining`
                 : daysUntilDue === 0
-                ? "Due today"
-                : `${Math.abs(daysUntilDue)} days overdue`}
+                  ? "Due today"
+                  : `${Math.abs(daysUntilDue)} days overdue`}
             </div>
           </div>
         </div>
@@ -344,9 +342,8 @@ export default function AgreementDetailPage({
             <div className="text-sm text-muted-foreground">Witness Status</div>
             <div className="font-semibold">{agreement.witnessName}</div>
             <div
-              className={`text-sm ${
-                agreement.witnessApproved ? "text-primary" : "text-orange"
-              }`}
+              className={`text-sm ${agreement.witnessApproved ? "text-primary" : "text-orange"
+                }`}
             >
               {agreement.witnessApproved ? "Approved" : "Pending Approval"}
             </div>
@@ -440,11 +437,10 @@ export default function AgreementDetailPage({
             <div key={item.event} className="flex items-start gap-4">
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                    item.completed
+                  className={`flex h-8 w-8 items-center justify-center rounded-full ${item.completed
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   {item.completed ? (
                     <Check className="h-4 w-4" />
@@ -454,27 +450,25 @@ export default function AgreementDetailPage({
                 </div>
                 {index < agreement.timeline.length - 1 && (
                   <div
-                    className={`w-0.5 h-8 mt-2 ${
-                      item.completed ? "bg-primary" : "bg-border"
-                    }`}
+                    className={`w-0.5 h-8 mt-2 ${item.completed ? "bg-primary" : "bg-border"
+                      }`}
                   />
                 )}
               </div>
               <div className="flex-1 pb-2">
                 <div
-                  className={`font-medium ${
-                    item.completed ? "text-foreground" : "text-muted-foreground"
-                  }`}
+                  className={`font-medium ${item.completed ? "text-foreground" : "text-muted-foreground"
+                    }`}
                 >
                   {item.event}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {item.date
                     ? new Date(item.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
                     : "Pending"}
                 </div>
               </div>
@@ -489,7 +483,7 @@ export default function AgreementDetailPage({
           <h2 className="text-lg font-semibold">Payment Actions</h2>
           <Sparkles className="h-5 w-5 text-primary" />
         </div>
-        
+
         {isLender && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground mb-4">
@@ -505,7 +499,7 @@ export default function AgreementDetailPage({
             </Button>
           </div>
         )}
-        
+
         <div className="mt-4">
           <p className="text-sm text-muted-foreground mb-4">
             Let AI suggest an optimal installment plan based on the amount and
@@ -605,9 +599,8 @@ export default function AgreementDetailPage({
             </div>
           </div>
           <ChevronRight
-            className={`h-5 w-5 text-muted-foreground transition-transform ${
-              showAIChat ? "rotate-90" : ""
-            }`}
+            className={`h-5 w-5 text-muted-foreground transition-transform ${showAIChat ? "rotate-90" : ""
+              }`}
           />
         </button>
 
@@ -618,18 +611,16 @@ export default function AgreementDetailPage({
               {aiMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${
-                    msg.role === "user" ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"
+                    }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      msg.role === "user"
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : msg.role === "system"
-                        ? "bg-secondary/50 text-muted-foreground"
-                        : "bg-secondary text-foreground"
-                    }`}
+                          ? "bg-secondary/50 text-muted-foreground"
+                          : "bg-secondary text-foreground"
+                      }`}
                   >
                     {msg.role === "ai" && (
                       <div className="flex items-center gap-2 mb-1 text-xs text-primary">
@@ -701,7 +692,7 @@ export default function AgreementDetailPage({
       <div className="space-y-3">
         {/* Witness Approval Button - Only show if user is witness and not yet approved */}
         {isWitness && !agreement.witnessApproved && (
-          <Button 
+          <Button
             onClick={handleWitnessApproval}
             className="w-full h-14 bg-chart-3 text-white hover:bg-chart-3/90"
           >
@@ -724,7 +715,7 @@ export default function AgreementDetailPage({
 
         {/* Lender Actions - Settle Agreement */}
         {isLender && agreement.status !== "settled" && (
-          <Button 
+          <Button
             onClick={handleSettleAgreement}
             className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90"
           >

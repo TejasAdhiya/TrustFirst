@@ -101,7 +101,7 @@ export default function LandingPage() {
           <div className="mt-16 flex flex-wrap items-center justify-center gap-8 sm:gap-16">
             {[
               { value: "10K+", label: "Active Users" },
-              { value: "$2M+", label: "Managed Securely" },
+              { value: "₹2M+", label: "Managed Securely" },
               { value: "99%", label: "Trust Rate" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
@@ -142,20 +142,18 @@ export default function LandingPage() {
                 onMouseLeave={() => setHoveredFeature(null)}
               >
                 <div
-                  className={`mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-colors duration-300 ${
-                    hoveredFeature === index
+                  className={`mb-6 flex h-14 w-14 items-center justify-center rounded-xl transition-colors duration-300 ${hoveredFeature === index
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-primary"
-                  }`}
+                    }`}
                 >
                   <feature.icon className="h-7 w-7" />
                 </div>
                 <h3 className="mb-3 text-xl font-semibold">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
                 <ChevronRight
-                  className={`absolute bottom-8 right-8 h-5 w-5 text-primary transition-all duration-300 ${
-                    hoveredFeature === index ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
-                  }`}
+                  className={`absolute bottom-8 right-8 h-5 w-5 text-primary transition-all duration-300 ${hoveredFeature === index ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
+                    }`}
                 />
               </div>
             ))}

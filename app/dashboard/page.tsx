@@ -150,7 +150,7 @@ export default function DashboardPage() {
               <span>You Lent</span>
             </div>
             <div className="text-2xl font-bold text-primary sm:text-3xl">
-              ${totalLent.toLocaleString()}
+              ₹{totalLent.toLocaleString()}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
               {agreements.filter((a) => a.type === "lent" && a.status !== "settled").length} active
@@ -163,7 +163,7 @@ export default function DashboardPage() {
               <span>You Borrowed</span>
             </div>
             <div className="text-2xl font-bold text-orange sm:text-3xl">
-              ${totalBorrowed.toLocaleString()}
+              ₹{totalBorrowed.toLocaleString()}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
               {agreements.filter((a) => a.type === "borrowed" && a.status !== "settled").length}{" "}
@@ -175,11 +175,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Net Balance</span>
             <span
-              className={`font-semibold ${
-                totalLent - totalBorrowed >= 0 ? "text-primary" : "text-orange"
-              }`}
+              className={`font-semibold ${totalLent - totalBorrowed >= 0 ? "text-primary" : "text-orange"
+                }`}
             >
-              {totalLent - totalBorrowed >= 0 ? "+" : "-"}$
+              {totalLent - totalBorrowed >= 0 ? "+" : "-"}₹
               {Math.abs(totalLent - totalBorrowed).toLocaleString()}
             </span>
           </div>
@@ -237,11 +236,10 @@ export default function DashboardPage() {
                   <div className="flex items-start gap-4">
                     {/* Avatar */}
                     <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold ${
-                        agreement.type === "lent"
+                      className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold ${agreement.type === "lent"
                           ? "bg-primary/20 text-primary"
                           : "bg-orange/20 text-orange"
-                      }`}
+                        }`}
                     >
                       {personInitials}
                     </div>
@@ -269,8 +267,8 @@ export default function DashboardPage() {
                           {daysUntilDue > 0
                             ? `${daysUntilDue} days left`
                             : daysUntilDue === 0
-                            ? "Due today"
-                            : `${Math.abs(daysUntilDue)} days overdue`}
+                              ? "Due today"
+                              : `${Math.abs(daysUntilDue)} days overdue`}
                         </span>
                       </div>
                     </div>
@@ -278,11 +276,10 @@ export default function DashboardPage() {
                     {/* Amount */}
                     <div className="text-right">
                       <div
-                        className={`text-lg font-bold ${
-                          agreement.type === "lent" ? "text-primary" : "text-orange"
-                        }`}
+                        className={`text-lg font-bold ${agreement.type === "lent" ? "text-primary" : "text-orange"
+                          }`}
                       >
-                        {agreement.type === "lent" ? "+" : "-"}${agreement.amount.toLocaleString()}
+                        {agreement.type === "lent" ? "+" : "-"}₹{agreement.amount.toLocaleString()}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {agreement.type === "lent" ? "To receive" : "To pay"}
@@ -330,7 +327,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-muted-foreground">
-                            ${agreement.amount.toLocaleString()}
+                            ₹{agreement.amount.toLocaleString()}
                           </div>
                           <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                             <CheckCircle2 className="h-3 w-3" />

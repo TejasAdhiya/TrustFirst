@@ -170,13 +170,13 @@ export default function ProfilePage() {
       <div className="mb-6 grid grid-cols-3 gap-3">
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-primary">
-            ${user.totalLent.toLocaleString()}
+            ₹{user.totalLent.toLocaleString()}
           </div>
           <div className="text-xs text-muted-foreground">Total Lent</div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <div className="text-2xl font-bold text-orange">
-            ${user.totalBorrowed.toLocaleString()}
+            ₹{user.totalBorrowed.toLocaleString()}
           </div>
           <div className="text-xs text-muted-foreground">Total Borrowed</div>
         </div>

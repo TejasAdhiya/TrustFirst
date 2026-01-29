@@ -66,7 +66,10 @@ export default function CreateAgreementPage() {
     witnessEmail: "",
     witnessPhone: "",
     proofFile: null as File | null,
+    transactionId: "",
   })
+
+  const [isExtracting, setIsExtracting] = useState(false)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -84,12 +87,44 @@ export default function CreateAgreementPage() {
     }))
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
       setFormData((prev) => ({
         ...prev,
-        proofFile: e.target.files![0],
+        proofFile: file,
       }))
+
+      // Auto-extract Transaction ID
+      if (file.type.startsWith("image/")) {
+        setIsExtracting(true)
+        try {
+          const data = new FormData()
+          data.append("file", file)
+
+          const res = await fetch("/api/extract-transaction-id", {
+            method: "POST",
+            body: data,
+          })
+
+          if (res.ok) {
+            const data = await res.json()
+            // Python script returns snake_case 'transaction_id', but we support both just in case
+            const extractedId = data.transactionId || data.transaction_id
+
+            if (extractedId) {
+              setFormData((prev) => ({
+                ...prev,
+                transactionId: extractedId,
+              }))
+            }
+          }
+        } catch (error) {
+          console.error("Extraction failed", error)
+        } finally {
+          setIsExtracting(false)
+        }
+      }
     }
   }
 
@@ -502,6 +537,28 @@ export default function CreateAgreementPage() {
                 Upload proof that you sent the money (bank transfer, payment
                 app, etc.)
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="transactionId" className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                Transaction ID (Auto-filled from image)
+              </Label>
+              <div className="relative">
+                <Input
+                  id="transactionId"
+                  name="transactionId"
+                  placeholder="e.g. 123456789012"
+                  value={formData.transactionId}
+                  onChange={handleChange}
+                  className="h-12 bg-input border-border pr-10"
+                />
+                {isExtracting && (
+                  <div className="absolute right-3 top-3">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                )}
+              </div>
             </div>
 
             <label

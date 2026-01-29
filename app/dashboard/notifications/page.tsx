@@ -6,7 +6,7 @@ import {
   Bell,
   CheckCircle2,
   Clock,
-  DollarSign,
+  IndianRupee,
   Users,
   Sparkles,
   MessageSquare,
@@ -27,7 +27,7 @@ const iconMap: Record<string, any> = {
   ai_call: Sparkles,
   payment_due: Clock,
   witness_approved: CheckCircle2,
-  money_received: DollarSign,
+  money_received: IndianRupee,
   witness_request: Users,
   message: MessageSquare,
   agreement_created: CheckCircle2,
@@ -144,11 +144,10 @@ export default function NotificationsPage() {
             return (
               <div
                 key={notification._id}
-                className={`rounded-xl border p-4 transition-colors ${
-                  notification.read
+                className={`rounded-xl border p-4 transition-colors ${notification.read
                     ? "border-border bg-card/50"
                     : "border-primary/30 bg-card"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-4">
                   <div
@@ -159,9 +158,8 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3
-                        className={`font-semibold ${
-                          notification.read ? "text-muted-foreground" : "text-foreground"
-                        }`}
+                        className={`font-semibold ${notification.read ? "text-muted-foreground" : "text-foreground"
+                          }`}
                       >
                         {notification.title}
                       </h3>
