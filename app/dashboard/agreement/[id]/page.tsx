@@ -48,6 +48,11 @@ export default function AgreementDetailPage({
   const [aiMessage, setAiMessage] = useState("")
   const [aiMessages, setAiMessages] = useState<any[]>([])
   const [isCallingBorrower, setIsCallingBorrower] = useState(false)
+  const [showExtensionModal, setShowExtensionModal] = useState(false)
+  const [selectedExtensionDays, setSelectedExtensionDays] = useState(1)
+  const [isExtending, setIsExtending] = useState(false)
+
+  // Extension modal states initialized
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -158,6 +163,7 @@ export default function AgreementDetailPage({
       const response = await fetch(`/api/agreements/${id}/ask-ai-call`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUserId }),
       })
 
       const data = await response.json()
@@ -245,6 +251,40 @@ export default function AgreementDetailPage({
     } catch (error) {
       console.error("Error sending reminder:", error)
       alert("Failed to send reminder")
+    }
+  }
+
+  const handleExtendDueDate = async () => {
+    if (!selectedExtensionDays || selectedExtensionDays < 1) {
+      alert("Please select valid extension days")
+      return
+    }
+
+    setIsExtending(true)
+    try {
+      const response = await fetch(`/api/agreements/${id}/extend-due-date`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUserId,
+          extensionDays: selectedExtensionDays,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert(`Due date extended by ${selectedExtensionDays} day(s) successfully!`)
+        setShowExtensionModal(false)
+        await fetchAgreement() // Refresh agreement data
+      } else {
+        alert(data.error || "Failed to extend due date")
+      }
+    } catch (error) {
+      console.error("Error extending due date:", error)
+      alert("Failed to extend due date")
+    } finally {
+      setIsExtending(false)
     }
   }
 
@@ -684,9 +724,23 @@ export default function AgreementDetailPage({
               >
                 <Phone className="mr-2 h-4 w-4" />
                 {isCallingBorrower
-                  ? "Calling Borrower..."
-                  : "Ask AI to Call Borrower"}
+                  ? "Calling..."
+                  : isLender
+                  ? "Ask AI to Call Borrower"
+                  : "Get Call from Setu AI"}
               </Button>
+
+              {/* Extend Due Date Button (Borrower Only) */}
+              {isBorrower && agreement.bufferDays > 0 && (
+                <Button
+                  onClick={() => setShowExtensionModal(true)}
+                  variant="outline"
+                  className="w-full h-12 bg-transparent border-orange/30 text-orange hover:bg-orange/10"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Extend Due Date ({agreement.bufferDays} days available)
+                </Button>
+              )}
 
               {/* Message Input */}
               <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -772,6 +826,54 @@ export default function AgreementDetailPage({
           </div>
         )}
       </div>
+
+      {/* Extension Modal */}
+      {showExtensionModal && agreement && agreement.bufferDays > 0 && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl border border-border max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">Extend Due Date</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              You can extend the due date using available buffer days.
+            </p>
+            
+            <div className="mb-6">
+              <Label htmlFor="extensionDays" className="mb-2 block">
+                Select extension days (1 to {agreement.bufferDays} days available)
+              </Label>
+              <select
+                id="extensionDays"
+                value={selectedExtensionDays}
+                onChange={(e) => setSelectedExtensionDays(Number(e.target.value))}
+                className="w-full h-12 px-4 rounded-lg border border-border bg-input"
+              >
+                {Array.from({ length: agreement.bufferDays }, (_, i) => i + 1).map((day) => (
+                  <option key={day} value={day}>
+                    {day} day{day > 1 ? 's' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowExtensionModal(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={isExtending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExtendDueDate}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={isExtending}
+              >
+                {isExtending ? "Extending..." : "Confirm Extension"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

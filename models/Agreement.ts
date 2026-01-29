@@ -105,7 +105,7 @@ const AgreementSchema: Schema = new Schema(
     },
     trustScore: {
       type: Number,
-      default: 100,
+      default: 80,
       min: 0,
       max: 100,
     },

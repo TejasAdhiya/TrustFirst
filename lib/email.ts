@@ -65,7 +65,7 @@ export const emailTemplates = {
               <div class="details">
                 <h3>Agreement Details:</h3>
                 <p><strong>Amount:</strong></p>
-                <div class="amount">$${amount.toLocaleString()}</div>
+                <div class="amount">₹${amount.toLocaleString('en-IN')}</div>
                 <p><strong>Expected Return Date:</strong> ${new Date(dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
               </div>
 
@@ -215,7 +215,7 @@ export const emailTemplates = {
               </div>
 
               <p><strong>Amount Due:</strong></p>
-              <div class="amount">$${amount.toLocaleString()}</div>
+              <div class="amount">₹${amount.toLocaleString('en-IN')}</div>
               
               <p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
 

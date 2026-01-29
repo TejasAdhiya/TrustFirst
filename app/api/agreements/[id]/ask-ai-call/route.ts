@@ -10,6 +10,17 @@ export async function POST(
   try {
     await connectDB();
     const { id } = await params;
+    
+    // Get userId from request body
+    const body = await request.json();
+    const { userId } = body;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
 
     // Fetch the agreement from MongoDB
     const agreement = await Agreement.findById(id);
@@ -18,6 +29,19 @@ export async function POST(
       return NextResponse.json(
         { error: 'Agreement not found' },
         { status: 404 }
+      );
+    }
+
+    // Determine who triggered the call
+    let triggeredBy: 'lender' | 'borrower';
+    if (userId === agreement.lenderId) {
+      triggeredBy = 'lender';
+    } else if (userId === agreement.borrowerId) {
+      triggeredBy = 'borrower';
+    } else {
+      return NextResponse.json(
+        { error: 'User is not authorized for this agreement' },
+        { status: 403 }
       );
     }
 
@@ -97,7 +121,7 @@ Due date: ${formatDate(dueDate)}
 Buffer period allowed: ${bufferDays || 0} days
 
 Trust and agreement conditions:
-Trust score: ${trustScore || 100}
+Trust score: ${trustScore || 80}
 Agreement type: ${type}
 Strict mode: ${strictModeText}
 
@@ -126,6 +150,7 @@ Conversation behavior rules for the AI:
       status,
       timestamp: new Date().toISOString(),
       agreementContext,
+      triggeredBy,
     };
 
     // Get webhook URL from environment variables
@@ -178,9 +203,10 @@ Conversation behavior rules for the AI:
     });
 
     // Add system message to aiMessages
+    const triggerText = triggeredBy === 'lender' ? 'lender' : 'borrower';
     agreement.aiMessages.push({
       role: 'system',
-      content: `AI mediator call initiated for borrower ${borrowerName} at ${contactInfo}`,
+      content: `AI mediator call initiated by ${triggerText} for borrower ${borrowerName} at ${contactInfo}`,
       timestamp: new Date(),
     });
 
