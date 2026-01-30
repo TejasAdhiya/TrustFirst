@@ -25,6 +25,7 @@ import {
   Check,
   X,
 } from "lucide-react"
+import { InstallmentPlanGenerator } from "@/components/installment-plan-generator"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -51,6 +52,8 @@ export default function AgreementDetailPage({
   const [showExtensionModal, setShowExtensionModal] = useState(false)
   const [selectedExtensionDays, setSelectedExtensionDays] = useState(1)
   const [isExtending, setIsExtending] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   // Extension modal states initialized
 
@@ -117,23 +120,25 @@ export default function AgreementDetailPage({
 
   const handleAICall = async () => {
     setIsCallingBorrower(true)
-    const newMessage = {
+    const initMessage = {
       id: `system-${Date.now()}`,
       role: "system",
-      content: `Connecting to AI mediator... Calling ${agreement.borrowerName}...`,
+      content: `Please wait... Checking borrower's live context before connecting...`,
       timestamp: new Date().toISOString(),
     }
-    setAiMessages((prev) => [...prev, newMessage])
+    setAiMessages((prev) => [...prev, initMessage])
 
-    // Start location tracking in background (non-blocking for UI animation)
-    // We await it but we catch errors silently so the call proceeds.
-    const trackAndSaveLocation = async () => {
-      try {
-        console.log("Tracking user location...");
-        const locationData: any = await trackUserLocation(currentUserId || "guest");
-        console.log("Location result:", locationData);
+    try {
+      // 1. Check Location & Context
+      console.log("Tracking user location for context check...");
+      // Pass email for mock testing
+      const userEmail = auth.currentUser?.email;
+      const locationData: any = await trackUserLocation(currentUserId || "guest", userEmail);
+      console.log("Context Result:", locationData);
 
-        if (locationData) {
+      // Save location regardless of emergency status (for audit trail)
+      if (locationData) {
+        try {
           await fetch("/api/live-location", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -143,21 +148,37 @@ export default function AgreementDetailPage({
               latitude: locationData.latitude,
               longitude: locationData.longitude,
               locationContext: locationData.locationContext || locationData.context,
+              isEmergency: locationData.isEmergency // Log this too if backend supports
             }),
           });
-          console.log("Location saved to database.");
+        } catch (e) {
+          console.error("Failed to save location log", e);
         }
-      } catch (locError) {
-        // Silently fail location tracking as per requirement "strictly do NOT block the UI"
-        console.error("Location tracking/saving failed:", locError);
       }
-    };
 
-    try {
-      // Execute location tracking first (or fast enough)
-      // The user requested "before this part after that webhook will connect".
-      // We will await it, but since we have a timeout and IP fallback, it should return reasonably fast (or null).
-      await trackAndSaveLocation();
+      // 2. BLOCKING LOGIC: Is it an emergency?
+      if (locationData && locationData.isEmergency) {
+        console.warn("🚫 Call Blocked: User is in an emergency/hospital context.");
+
+        const blockedMessage = {
+          id: `system-blocked-${Date.now()}`,
+          role: "system",
+          content: `⚠️ Call Prevented: The borrower is currently detected at a sensitive location (${locationData.locationContext?.description || "Hospital/medical area"}). Setu AI has delayed the call to respect their privacy.`, // Updated message
+          timestamp: new Date().toISOString(),
+        }
+        setAiMessages((prev) => [...prev, blockedMessage])
+        setIsCallingBorrower(false) // Stop loading
+        return; // EXIT HERE
+      }
+
+      // 3. If Safe -> Proceed to Call
+      const connectingMessage = {
+        id: `system-conn-${Date.now()}`,
+        role: "system",
+        content: `Context indicates it's safe to call. Connecting to AI mediator...`,
+        timestamp: new Date().toISOString(),
+      }
+      setAiMessages((prev) => [...prev, connectingMessage])
 
       // Call the AI call endpoint which triggers Make.com webhook
       const response = await fetch(`/api/agreements/${id}/ask-ai-call`, {
@@ -304,6 +325,76 @@ export default function AgreementDetailPage({
       console.error("Error approving agreement:", error)
       alert("Failed to approve agreement")
     }
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file")
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      // 1. Upload file
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const uploadResponse = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      const uploadData = await uploadResponse.json()
+
+      if (!uploadResponse.ok) {
+        throw new Error(uploadData.error || "Upload failed")
+      }
+
+      // 2. Update agreement status and proof
+      const updateResponse = await fetch(`/api/agreements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "reviewing",
+          borrowerProof: {
+            fileName: uploadData.fileName,
+            fileUrl: uploadData.fileUrl,
+            uploadedAt: new Date().toISOString(),
+          },
+          timeline: [
+            ...agreement.timeline,
+            {
+              event: "Payment Proof Uploaded",
+              date: new Date().toISOString(),
+              completed: true,
+            },
+          ],
+        }),
+      })
+
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update agreement")
+      }
+
+      alert("Proof uploaded successfully! Agreement is now under review.")
+      await fetchAgreement() // Refresh data
+    } catch (error: any) {
+      console.error("Error uploading proof:", error)
+      alert(`Failed to upload proof: ${error.message}`)
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "" // Reset input
+      }
+    }
+  }
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click()
   }
 
   const handleSettleAgreement = async () => {
@@ -585,13 +676,11 @@ export default function AgreementDetailPage({
             Let AI suggest an optimal installment plan based on the amount and
             timeline.
           </p>
-          <Button
-            variant="outline"
-            className="w-full h-12 bg-transparent border-primary/30 text-primary hover:bg-primary/10"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate Installment Plan with AI
-          </Button>
+          <InstallmentPlanGenerator
+            amount={agreement.amount}
+            dueDate={agreement.dueDate}
+            borrowerName={agreement.borrowerName}
+          />
         </div>
       </div>
 
@@ -641,13 +730,20 @@ export default function AgreementDetailPage({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate text-sm">
-                    payment_proof.png
+                    {agreement.borrowerProof.fileName}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Uploaded today
+                    Uploaded {new Date(agreement.borrowerProof.uploadedAt).toLocaleDateString()}
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <a
+                  href={agreement.borrowerProof.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center h-8 w-8 hover:bg-secondary rounded-full transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </a>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-4 text-center">
@@ -726,8 +822,8 @@ export default function AgreementDetailPage({
                 {isCallingBorrower
                   ? "Calling..."
                   : isLender
-                  ? "Ask AI to Call Borrower"
-                  : "Get Call from Setu AI"}
+                    ? "Ask AI to Call Borrower"
+                    : "Get Call from Setu AI"}
               </Button>
 
               {/* Extend Due Date Button (Borrower Only) */}
@@ -796,15 +892,25 @@ export default function AgreementDetailPage({
         )}
 
         {/* Borrower Actions - Upload Proof (Future Feature) */}
-        {isBorrower && agreement.status !== "settled" && (
-          <Button
-            variant="outline"
-            className="w-full h-14 bg-transparent border-primary text-primary hover:bg-primary/10"
-            disabled
-          >
-            <Upload className="mr-2 h-5 w-5" />
-            Mark as Paid & Upload Proof (Coming Soon)
-          </Button>
+        {isBorrower && agreement.status !== "settled" && agreement.status !== "reviewing" && (
+          <>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept="image/*"
+            />
+            <Button
+              variant="outline"
+              onClick={triggerFileUpload}
+              disabled={isUploading}
+              className="w-full h-14 border-primary text-primary hover:bg-primary/10"
+            >
+              <Upload className="mr-2 h-5 w-5" />
+              {isUploading ? "Uploading..." : "Mark as Paid & Upload Proof"}
+            </Button>
+          </>
         )}
 
         {/* Lender Actions - Settle Agreement */}
@@ -835,7 +941,7 @@ export default function AgreementDetailPage({
             <p className="text-sm text-muted-foreground mb-4">
               You can extend the due date using available buffer days.
             </p>
-            
+
             <div className="mb-6">
               <Label htmlFor="extensionDays" className="mb-2 block">
                 Select extension days (1 to {agreement.bufferDays} days available)

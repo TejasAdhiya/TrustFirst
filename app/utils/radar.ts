@@ -36,9 +36,41 @@ const getBrowserLocation = (): Promise<GeolocationCoordinates> => {
     });
 };
 
-export const trackUserLocation = async (userId?: string) => {
+const isEmergencyLocation = (data: any): boolean => {
+    if (!data) return false;
+    const keywords = ["hospital", "emergency", "clinic", "doctor", "health", "pharmacy", "medical", "ambulance"];
+    const textToCheck = [
+        data.description,
+        data.name,
+        data.amenity,
+        data.type,
+        data.category
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return keywords.some(keyword => textToCheck.includes(keyword));
+};
+
+export const trackUserLocation = async (userId?: string, userEmail?: string | null) => {
     initializeRadar();
     if (userId) Radar.setUserId(userId);
+
+    // MOCK: Test emergency context for specific user
+    if (userEmail === "darshiii2504@gmail.com") {
+        console.log("🚑 MOCKING Emergency Context for darshiii2504@gmail.com");
+        return {
+            latitude: 19.0760, // Mock lat
+            longitude: 72.8777, // Mock long
+            accuracy: 10,
+            locationContext: {
+                description: "City General Hospital",
+                name: "City General Hospital",
+                category: "hospital",
+                type: "hospital"
+            },
+            source: "mock-emergency-test",
+            isEmergency: true
+        };
+    }
 
     console.log("📍 Starting Dynamic Tracking...");
 
@@ -54,12 +86,17 @@ export const trackUserLocation = async (userId?: string) => {
             const finish = (contextData: any, source: string) => {
                 if (resolved) return;
                 resolved = true;
+
+                // Check if this is an emergency location
+                const isEmergency = isEmergencyLocation(contextData);
+
                 resolve({
                     latitude: coords.latitude,
                     longitude: coords.longitude,
                     accuracy: coords.accuracy,
                     locationContext: contextData,
-                    source: source
+                    source: source,
+                    isEmergency: isEmergency // Export this flag
                 });
             };
 
@@ -79,7 +116,9 @@ export const trackUserLocation = async (userId?: string) => {
                     finish({
                         description: geofence.description, // "Universal AI University"
                         geofenceId: geofence._id,
-                        tag: geofence.tag
+                        tag: geofence.tag,
+                        // Pass through tag as potential category for emergency check
+                        category: geofence.tag
                     }, "radar-dynamic-geofence");
                 }
 
@@ -103,6 +142,6 @@ export const trackUserLocation = async (userId?: string) => {
 
     } catch (browserError) {
         console.error("❌ Location Failed:", browserError);
-        return null;
+        return null; // Return null on complete failure, or maybe default object
     }
 };

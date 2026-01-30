@@ -5,12 +5,14 @@ import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Plus, User, Bell, Sparkles, Users } from "lucide-react"
+import useFcmToken from "@/hooks/useFcmToken"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  useFcmToken()
   const pathname = usePathname()
 
   const navItems = [
@@ -37,11 +39,10 @@ export default function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  pathname === item.href
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${pathname === item.href
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                }`}
+                  }`}
               >
                 <item.icon className="h-4 w-4" />
                 {item.label}
@@ -75,9 +76,8 @@ export default function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 rounded-lg px-4 py-2 transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}
+                className={`flex flex-col items-center gap-1 rounded-lg px-4 py-2 transition-colors ${isActive ? "text-primary" : "text-muted-foreground"
+                  }`}
               >
                 <item.icon className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
                 <span className="text-xs font-medium">{item.label}</span>

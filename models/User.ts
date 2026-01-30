@@ -13,6 +13,8 @@ export interface IUser extends Document {
   agreementCount: number;
   createdAt: Date;
   updatedAt: Date;
+  isVerified: boolean;
+  fcmToken?: string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -49,7 +51,7 @@ const UserSchema: Schema = new Schema(
     },
     trustScore: {
       type: Number,
-      default: 80,
+      default: 70,
       min: 0,
       max: 100,
     },
@@ -64,6 +66,13 @@ const UserSchema: Schema = new Schema(
     agreementCount: {
       type: Number,
       default: 0,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    fcmToken: {
+      type: String,
     },
   },
   {

@@ -15,8 +15,22 @@ if (!firebaseConfig.apiKey) {
     console.error("Firebase API Key is missing! Please populate your .env file with the credentials from your Firebase Console.");
 }
 
+import { getMessaging, isSupported } from "firebase/messaging";
+
+// ... existing code ...
+
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { auth, googleProvider };
+let messaging: any = null;
+
+if (typeof window !== "undefined") {
+    isSupported().then((supported) => {
+        if (supported) {
+            messaging = getMessaging(app);
+        }
+    });
+}
+
+export { auth, googleProvider, messaging };

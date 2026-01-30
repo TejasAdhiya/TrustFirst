@@ -15,8 +15,21 @@ import {
   ChevronRight,
   Edit2,
   Star,
+  CheckCircle,
+  FileText,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
 import { auth } from "@/firebase"
 import { onAuthStateChanged, signOut } from "firebase/auth"
 
@@ -57,6 +70,62 @@ export default function ProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  // Verification Logic
+  const { toast } = useToast()
+  const [panNumber, setPanNumber] = useState("")
+  const [verifying, setVerifying] = useState(false)
+
+  const handleVerify = async () => {
+    // Regex for PAN card: 5 letters, 4 digits, 1 letter
+    const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]{1}/;
+
+    if (!panRegex.test(panNumber.toUpperCase())) {
+      toast({
+        title: "Invalid PAN Number",
+        description: "Please enter a valid PAN number format (e.g., ABCDE1234F).",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setVerifying(true)
+      const response = await fetch('/api/user/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uid: user.uid }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setUser(data.user) // Update user with new Trust Score and isVerified status
+        toast({
+          title: "Verification Successful",
+          description: "Your identity has been verified and Trust Score increased by 10!",
+        })
+        setPanNumber("") // Clear input
+      } else {
+        toast({
+          title: "Verification Failed",
+          description: data.error || "Something went wrong.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Verification error:", error)
+      toast({
+        title: "Error",
+        description: "Details: An unexpected error occurred.",
+        variant: "destructive",
+      })
+    } finally {
+      setVerifying(false)
+    }
+  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -159,6 +228,8 @@ export default function ProfilePage() {
             <div className="text-sm text-muted-foreground">Your Trust Score</div>
             <div className="text-2xl font-bold text-primary">{user.trustScore}/100</div>
           </div>
+
+
           <div className="ml-auto text-right">
             <div className="text-xs text-muted-foreground">Member since</div>
             <div className="text-sm font-medium">{getMemberSince(user.createdAt)}</div>
@@ -186,6 +257,61 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Identity Verification */}
+      <div className="mb-6 rounded-2xl border border-border bg-card p-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-semibold text-lg">Identity Verification</h2>
+            <p className="text-sm text-muted-foreground">Verify your identity to boost your Trust Score</p>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          {user.isVerified ? (
+            <div className="flex items-center gap-2 rounded-xl bg-green-500/10 p-4 text-green-600 border border-green-500/20">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Identity verification complete</span>
+              <Badge className="ml-auto bg-green-500 hover:bg-green-600">Verified</Badge>
+            </div>
+          ) : (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full" variant="secondary">
+                  Verify Identity
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Verify Identity</DialogTitle>
+                  <DialogDescription>
+                    Enter your PAN number to verify your identity. We do not store this information.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center space-x-2">
+                  <div className="grid flex-1 gap-2">
+                    <Input
+                      placeholder="Enter PAN Number (e.g. ABCDE1234F)"
+                      value={panNumber}
+                      onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                      className="font-mono uppercase"
+                      disabled={verifying}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleVerify} disabled={verifying || !panNumber}>
+                    {verifying ? "Verifying..." : "Verify"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
+
       {/* Menu Items */}
       <div className="mb-6 space-y-2">
         {menuItems.map((item) => (
@@ -204,18 +330,19 @@ export default function ProfilePage() {
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </button>
-        ))}
-      </div>
+        ))
+        }
+      </div >
 
       {/* Sign Out */}
-      <Button
+      < Button
         onClick={handleSignOut}
         variant="outline"
         className="w-full h-14 bg-transparent border-destructive/30 text-destructive hover:bg-destructive/10"
       >
         <LogOut className="mr-2 h-5 w-5" />
         Sign Out
-      </Button>
-    </div>
+      </Button >
+    </div >
   )
 }

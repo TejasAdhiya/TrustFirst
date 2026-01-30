@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         name: name || email.split('@')[0],
         photoURL: photoURL || '',
         provider: provider || 'email',
-        trustScore: 100,
+        trustScore: 70,
         totalLent: 0,
         totalBorrowed: 0,
         agreementCount: 0,

@@ -7,6 +7,7 @@ export interface ILiveLocation extends Document {
     latitude: number;
     longitude: number;
     locationContext: any;
+    isEmergency?: boolean; // Added field
     timestamp: Date;
 }
 
@@ -34,6 +35,10 @@ const LiveLocationSchema: Schema = new Schema({
     locationContext: {
         type: Schema.Types.Mixed,
         default: {}
+    },
+    isEmergency: {
+        type: Boolean,
+        default: false
     },
     timestamp: {
         type: Date,

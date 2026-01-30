@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       phone: phone || '',
       photoURL: photoURL || '',
       provider: provider || 'email',
-      trustScore: 100,
+      trustScore: 70,
       totalLent: 0,
       totalBorrowed: 0,
       agreementCount: 0,

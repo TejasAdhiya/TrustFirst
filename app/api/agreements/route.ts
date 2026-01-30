@@ -4,6 +4,7 @@ import Agreement from '@/models/Agreement';
 import User from '@/models/User';
 import Notification from '@/models/Notification';
 import { sendEmail, emailTemplates } from '@/lib/email';
+import { sendNotification } from '@/lib/firebase-admin';
 
 // GET all agreements for a user
 export async function GET(request: NextRequest) {
@@ -79,9 +80,9 @@ export async function POST(request: NextRequest) {
     const borrowerUser = await User.findOne({ email: borrowerEmail });
     if (!borrowerUser) {
       return NextResponse.json(
-        { 
-          error: 'Borrower not found', 
-          message: `${borrowerEmail} is not registered on Setu AI. They must create an account first.` 
+        {
+          error: 'Borrower not found',
+          message: `${borrowerEmail} is not registered on Setu AI. They must create an account first.`
         },
         { status: 404 }
       );
@@ -92,9 +93,9 @@ export async function POST(request: NextRequest) {
       const witnessUser = await User.findOne({ email: witnessEmail });
       if (!witnessUser) {
         return NextResponse.json(
-          { 
-            error: 'Witness not found', 
-            message: `${witnessEmail} is not registered on Setu AI. They must create an account first.` 
+          {
+            error: 'Witness not found',
+            message: `${witnessEmail} is not registered on Setu AI. They must create an account first.`
           },
           { status: 404 }
         );
@@ -204,6 +205,15 @@ export async function POST(request: NextRequest) {
         subject: witnessEmailTemplate.subject,
         html: witnessEmailTemplate.html,
       });
+    }
+
+    // Send Push Notification to Borrower
+    if (borrowerUser.fcmToken) {
+      await sendNotification(
+        borrowerUser.fcmToken,
+        "New Lending Agreement",
+        `${lenderName} created a lending agreement with you for ₹${amount}`
+      );
     }
 
     return NextResponse.json(

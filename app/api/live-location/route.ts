@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         console.log("API: Received live location payload:", JSON.stringify(body, null, 2));
 
-        const { agreementId, userId, latitude, longitude, locationContext } = body;
+        const { agreementId, userId, latitude, longitude, locationContext, isEmergency } = body;
 
         if (!agreementId || latitude === undefined || longitude === undefined) {
             console.error("API: Missing required fields");
@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
             latitude,
             longitude,
             locationContext: locationContext || {},
+            isEmergency: !!isEmergency,
             timestamp: new Date(),
         });
 
