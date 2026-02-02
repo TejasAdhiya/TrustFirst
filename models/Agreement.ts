@@ -41,6 +41,19 @@ export interface IAgreement extends Document {
     content: string;
     timestamp: Date;
   }>;
+  selectedInstallmentPlan?: {
+    planIndex: number;
+    planName: string;
+    installments: Array<{
+      date: string;
+      amount: number;
+      note?: string;
+      proofUploaded: boolean;
+      proofUrl?: string;
+      proofFileName?: string;
+      uploadedAt?: Date;
+    }>;
+  };
   groupContribution?: boolean; // NEW: Mark if this is from group money request
   moneyRequestId?: string; // NEW: Link to money request
   createdAt: Date;
@@ -162,6 +175,45 @@ const AgreementSchema: Schema = new Schema(
         },
       },
     ],
+    selectedInstallmentPlan: {
+      type: {
+        planIndex: {
+          type: Number,
+        },
+        planName: {
+          type: String,
+        },
+        installments: {
+          type: [
+            {
+              date: {
+                type: String,
+              },
+              amount: {
+                type: Number,
+              },
+              note: {
+                type: String,
+              },
+              proofUploaded: {
+                type: Boolean,
+                default: false,
+              },
+              proofUrl: {
+                type: String,
+              },
+              proofFileName: {
+                type: String,
+              },
+              uploadedAt: {
+                type: Date,
+              },
+            },
+          ],
+        },
+      },
+      default: undefined,
+    },
     groupContribution: {
       type: Boolean,
       default: false,

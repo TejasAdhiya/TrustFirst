@@ -22,13 +22,17 @@ interface InstallmentPlanGeneratorProps {
     currency?: string
     dueDate: string
     borrowerName: string
+    agreementId: string
+    onPlanConfirmed?: (plan: InstallmentPlan, planIndex: number) => void
 }
 
 export function InstallmentPlanGenerator({
     amount,
     currency = "INR",
     dueDate,
-    borrowerName
+    borrowerName,
+    agreementId,
+    onPlanConfirmed
 }: InstallmentPlanGeneratorProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -62,8 +66,19 @@ export function InstallmentPlanGenerator({
 
     const handleSelectPlan = (index: number) => {
         setSelectedPlanIndex(index)
-        // Future: Call an API to save the selected plan to the agreement
-        // For now, we'll just show a selection state
+    }
+
+    const handleConfirmPlan = () => {
+        if (selectedPlanIndex !== null && onPlanConfirmed) {
+            const selectedPlan = plans[selectedPlanIndex]
+            // Store plan in sessionStorage to avoid regenerating
+            sessionStorage.setItem('selectedInstallmentPlan', JSON.stringify({
+                planIndex: selectedPlanIndex,
+                plan: selectedPlan
+            }))
+            onPlanConfirmed(selectedPlan, selectedPlanIndex)
+            setIsOpen(false)
+        }
     }
 
     return (
@@ -190,6 +205,19 @@ export function InstallmentPlanGenerator({
                         </div>
                     )}
                 </div>
+
+                {/* Confirm Button */}
+                {!loading && !error && selectedPlanIndex !== null && (
+                    <div className="p-6 pt-0 border-t border-border shrink-0">
+                        <Button 
+                            onClick={handleConfirmPlan} 
+                            className="w-full h-12 text-lg font-semibold gap-2"
+                        >
+                            <Check className="h-5 w-5" />
+                            Confirm Selected Plan & Upload Payment Proofs
+                        </Button>
+                    </div>
+                )}
             </DialogContent>
         </Dialog>
     )

@@ -20,6 +20,57 @@ export interface InstallmentPlan {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Validation function to ensure all installments are before due date
+function validateInstallmentDates(plans: InstallmentPlan[], dueDate: string): boolean {
+    const dueDateObj = new Date(dueDate)
+    dueDateObj.setHours(23, 59, 59, 999) // End of due date
+    
+    for (const plan of plans) {
+        for (const installment of plan.installments) {
+            const installmentDate = new Date(installment.date)
+            if (installmentDate > dueDateObj) {
+                console.error(`Invalid installment date: ${installment.date} is after due date ${dueDate}`)
+                return false
+            }
+        }
+    }
+    return true
+}
+
+// Function to fix installment dates if they exceed due date
+function fixInstallmentDates(plans: InstallmentPlan[], dueDate: string): InstallmentPlan[] {
+    const dueDateObj = new Date(dueDate)
+    const today = new Date()
+    
+    return plans.map(plan => {
+        const fixedInstallments = plan.installments.map((installment, index) => {
+            const installmentDate = new Date(installment.date)
+            
+            // If installment date is after due date, recalculate
+            if (installmentDate > dueDateObj) {
+                // Distribute installments evenly between today and due date
+                const totalInstallments = plan.installments.length
+                const timeSpan = dueDateObj.getTime() - today.getTime()
+                const intervalMs = timeSpan / (totalInstallments + 1)
+                
+                const newDate = new Date(today.getTime() + (intervalMs * (index + 1)))
+                
+                return {
+                    ...installment,
+                    date: newDate.toISOString().split('T')[0]
+                }
+            }
+            
+            return installment
+        })
+        
+        return {
+            ...plan,
+            installments: fixedInstallments
+        }
+    })
+}
+
 export async function generateInstallmentPlans(
     amount: number,
     currency: string = "INR",
@@ -34,6 +85,12 @@ export async function generateInstallmentPlans(
     // Use the premium model
     const modelName = "gemini-2.5-pro"; // Premium version requested
 
+    // Calculate days until due date
+    const today = new Date()
+    const dueDateObj = new Date(dueDate)
+    const daysUntilDue = Math.ceil((dueDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    const monthsUntilDue = Math.floor(daysUntilDue / 30)
+
     const prompt = `
     You are an empathetic but professional financial mediator assistant for an app called Setu.
     Your goal is to generate 3 distinct, realistic, and fair installment repayment plans for a debt.
@@ -41,20 +98,33 @@ export async function generateInstallmentPlans(
     CONTEXT:
     - Debt Amount: ${amount} ${currency}
     - Original Due Date: ${dueDate}
+    - Days Until Due Date: ${daysUntilDue} days
     - Borrower Name: ${borrowerName}
     - Today's Date: ${new Date().toISOString().split('T')[0]}
 
-    REQUIREMENTS:
-    1. Generate exactly 3 plans:
-       - Plan A: "Aggressive Repayment" (Shortest time, higher installments, clears debt fast).
-       - Plan B: "Balanced Approach" (Moderate installment amounts and duration).
-       - Plan C: "Flexible/Ease-of-Mind" (Smaller installments over a longer period, prioritizing manageability).
-    2. The sum of all 'amount' fields in 'installments' MUST equal exactly ${amount}.
-    3. Installment dates should be logical (e.g., Monthly or Bi-weekly). Start the first installment soon (e.g., within 7-30 days).
-    4. Provide a helpful description for each plan explaining who it's best for.
+    CRITICAL REQUIREMENTS:
+    1. ALL INSTALLMENT DATES MUST BE ON OR BEFORE THE DUE DATE: ${dueDate}
+       - This is MANDATORY. No installment can have a date after ${dueDate}.
+       - The final installment MUST be on or before ${dueDate}.
+    
+    2. Generate exactly 3 plans based on available time until due date:
+       - Plan A: "Aggressive Repayment" (${Math.max(2, Math.ceil(monthsUntilDue * 0.4))} months - Shortest time, higher installments, clears debt fast).
+       - Plan B: "Balanced Approach" (${Math.max(3, Math.ceil(monthsUntilDue * 0.7))} months - Moderate installment amounts and duration).
+       - Plan C: "Flexible Repayment" (${Math.max(4, monthsUntilDue)} months - Smaller installments spread over maximum available time).
+    
+    3. The sum of all 'amount' fields in 'installments' MUST equal exactly ${amount}.
+    
+    4. Installment dates should be logical:
+       - Start the first installment within 7-14 days from today
+       - Space installments evenly (monthly or bi-weekly depending on plan duration)
+       - Ensure the LAST installment date is on or before ${dueDate}
+    
+    5. Provide a helpful description for each plan explaining who it's best for.
+    
+    6. Set durationMonths accurately based on the actual time span of installments.
     
     OUTPUT FORMAT:
-    Return strictly JSON matching the schema.
+    Return strictly JSON matching the schema. Remember: NO dates after ${dueDate}!
   `
 
     // Define schema for structured output
@@ -109,7 +179,17 @@ export async function generateInstallmentPlans(
             console.log(`[GeneratePlans] Success!`);
 
             try {
-                const plans = JSON.parse(text) as InstallmentPlan[];
+                let plans = JSON.parse(text) as InstallmentPlan[];
+                
+                // Validate that all installment dates are before due date
+                const isValid = validateInstallmentDates(plans, dueDate)
+                
+                if (!isValid) {
+                    console.warn(`[GeneratePlans] AI generated dates beyond due date. Fixing...`)
+                    plans = fixInstallmentDates(plans, dueDate)
+                    console.log(`[GeneratePlans] Dates fixed to respect due date: ${dueDate}`)
+                }
+                
                 return { plans };
             } catch (parseError) {
                 console.error(`[GeneratePlans] JSON Parse error:`, parseError);

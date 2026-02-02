@@ -680,6 +680,11 @@ export default function AgreementDetailPage({
             amount={agreement.amount}
             dueDate={agreement.dueDate}
             borrowerName={agreement.borrowerName}
+            agreementId={id}
+            onPlanConfirmed={(plan, planIndex) => {
+              // Navigate to payment proof upload page
+              router.push(`/dashboard/agreement/${id}/upload-proofs?plan=${planIndex}`)
+            }}
           />
         </div>
       </div>
