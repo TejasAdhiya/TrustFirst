@@ -15,8 +15,14 @@ const useFcmToken = () => {
         const retrieveToken = async () => {
             try {
                 if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-                    // Register service worker if not already registered (though usually Next.js handles static assets, we just ensure scope)
-                    // Actually, for FCM we just need the file to exist at public/firebase-messaging-sw.js
+                    // Unregister old service workers to clear cache
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+                    
+                    // Wait a bit for unregistration to complete
+                    await new Promise(resolve => setTimeout(resolve, 100));
 
                     const permission = await Notification.requestPermission();
                     setNotificationPermissionStatus(permission);

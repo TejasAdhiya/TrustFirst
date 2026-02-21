@@ -28,11 +28,9 @@ export default function DashboardLayout({
       {/* Desktop Header */}
       <header className="fixed top-0 left-0 right-0 z-50 hidden border-b border-border bg-background/95 backdrop-blur-sm lg:block">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold">Setu AI</span>
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <img src="/logo.png" alt="TrustFirst" className="h-12 w-12 object-contain" />
+            <span className="text-xl font-semibold">TrustFirst</span>
           </Link>
           <nav className="flex items-center gap-2">
             {navItems.map((item) => (
@@ -55,11 +53,9 @@ export default function DashboardLayout({
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm lg:hidden">
         <div className="flex h-14 items-center justify-center px-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-semibold">Setu AI</span>
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <img src="/logo.png" alt="TrustFirst" className="h-10 w-10 object-contain" />
+            <span className="text-lg font-semibold">TrustFirst</span>
           </Link>
         </div>
       </header>

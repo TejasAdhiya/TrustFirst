@@ -163,7 +163,7 @@ export default function AgreementDetailPage({
         const blockedMessage = {
           id: `system-blocked-${Date.now()}`,
           role: "system",
-          content: `⚠️ Call Prevented: The borrower is currently detected at a sensitive location (${locationData.locationContext?.description || "Hospital/medical area"}). Setu AI has delayed the call to respect their privacy.`, // Updated message
+          content: `⚠️ Call Prevented: The borrower is currently detected at a sensitive location (${locationData.locationContext?.description || "Hospital/medical area"}). TrustFirst AI has delayed the call to respect their privacy.`,
           timestamp: new Date().toISOString(),
         }
         setAiMessages((prev) => [...prev, blockedMessage])
@@ -773,7 +773,7 @@ export default function AgreementDetailPage({
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div className="text-left">
-              <h2 className="font-semibold">Setu AI Mediator</h2>
+              <h2 className="font-semibold">TrustFirst AI Mediator</h2>
               <p className="text-sm text-muted-foreground">
                 Get AI help with sensitive conversations
               </p>
@@ -806,7 +806,7 @@ export default function AgreementDetailPage({
                     {msg.role === "ai" && (
                       <div className="flex items-center gap-2 mb-1 text-xs text-primary">
                         <Sparkles className="h-3 w-3" />
-                        Setu AI
+                        TrustFirst AI
                       </div>
                     )}
                     <p className="text-sm">{msg.content}</p>
@@ -828,7 +828,7 @@ export default function AgreementDetailPage({
                   ? "Calling..."
                   : isLender
                     ? "Ask AI to Call Borrower"
-                    : "Get Call from Setu AI"}
+                    : "Get Call from TrustFirst AI"}
               </Button>
 
               {/* Extend Due Date Button (Borrower Only) */}

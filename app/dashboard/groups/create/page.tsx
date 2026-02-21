@@ -175,7 +175,7 @@ export default function CreateGroupPage() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Members must be registered on Setu AI
+              Members must be registered on TrustFirst
             </p>
           </div>
 

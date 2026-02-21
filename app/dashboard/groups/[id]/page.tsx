@@ -520,7 +520,7 @@ export default function GroupDetailPage({
             <DialogTitle>Add Member to Group</DialogTitle>
             <DialogDescription>
               Enter the email address of the person you want to add to this group.
-              They must have an account on Setu.
+              They must have an account on TrustFirst.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">

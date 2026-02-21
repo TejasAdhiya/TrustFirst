@@ -130,11 +130,9 @@ export default function SignUpPage() {
           <ArrowLeft className="h-4 w-4" />
           <span className="text-sm">Back</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-semibold">Setu AI</span>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="TrustFirst" className="h-10 w-10 object-contain" />
+          <span className="font-semibold">TrustFirst</span>
         </div>
       </header>
 

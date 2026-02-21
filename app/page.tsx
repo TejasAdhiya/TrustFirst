@@ -31,11 +31,9 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight">Setu AI</span>
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="TrustFirst" className="h-12 w-12 object-contain" />
+            <span className="text-xl font-semibold tracking-tight">TrustFirst</span>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/auth/signin">
@@ -166,7 +164,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-16 text-center">
             <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              How Setu AI Works
+              How TrustFirst Works
             </h2>
             <p className="mx-auto max-w-2xl text-muted-foreground">
               Three simple steps to stress-free lending between friends and family.
@@ -208,7 +206,7 @@ export default function LandingPage() {
             Ready to transform how you lend?
           </h2>
           <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground">
-            Join thousands of users who have simplified their informal finances with Setu AI.
+            Join thousands of users who have simplified their informal finances with TrustFirst.
           </p>
           <Link href="/auth/signup">
             <Button
@@ -225,14 +223,12 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border py-12">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold">Setu AI</span>
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="TrustFirst" className="h-10 w-10 object-contain" />
+            <span className="font-semibold">TrustFirst</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2026 Setu AI. Building trust, one agreement at a time.
+            © 2026 TrustFirst. Building trust, one agreement at a time.
           </p>
         </div>
       </footer>

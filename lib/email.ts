@@ -55,12 +55,12 @@ export const emailTemplates = {
         <body>
           <div class="container">
             <div class="header">
-              <h1>✨ Setu AI</h1>
+              <h1>✨ TrustFirst</h1>
               <p>Trust & Transparency in Informal Finance</p>
             </div>
             <div class="content">
               <h2>Hi ${borrowerName},</h2>
-              <p><strong>${lenderName}</strong> has created a lending agreement with you on Setu AI.</p>
+              <p><strong>${lenderName}</strong> has created a lending agreement with you on TrustFirst.</p>
               
               <div class="details">
                 <h3>Agreement Details:</h3>
@@ -69,7 +69,7 @@ export const emailTemplates = {
                 <p><strong>Expected Return Date:</strong> ${new Date(dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
               </div>
 
-              <p>Please review and acknowledge this agreement in your Setu AI dashboard.</p>
+              <p>Please review and acknowledge this agreement in your TrustFirst dashboard.</p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/agreement/${agreementId}" class="button">View Agreement</a>
@@ -78,7 +78,7 @@ export const emailTemplates = {
               <p style="color: #6b7280; font-size: 14px;">This is an informal lending agreement. Both parties trust each other to honor this commitment.</p>
             </div>
             <div class="footer">
-              <p>© 2026 Setu AI. Building trust, one agreement at a time.</p>
+              <p>© 2026 TrustFirst. Building trust, one agreement at a time.</p>
             </div>
           </div>
         </body>
@@ -105,7 +105,7 @@ export const emailTemplates = {
         <body>
           <div class="container">
             <div class="header">
-              <h1>✨ Setu AI</h1>
+              <h1>✨ TrustFirst</h1>
               <p>Trust & Transparency in Informal Finance</p>
             </div>
             <div class="content">
@@ -121,7 +121,7 @@ export const emailTemplates = {
                 </ul>
               </div>
 
-              <p>Please review and approve this witness request in your Setu AI dashboard.</p>
+              <p>Please review and approve this witness request in your TrustFirst dashboard.</p>
               
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/agreement/${agreementId}" class="button">Review & Approve</a>
@@ -130,7 +130,7 @@ export const emailTemplates = {
               <p style="color: #6b7280; font-size: 14px;">As a witness, you're helping maintain trust in informal lending.</p>
             </div>
             <div class="footer">
-              <p>© 2026 Setu AI. Building trust, one agreement at a time.</p>
+              <p>© 2026 TrustFirst. Building trust, one agreement at a time.</p>
             </div>
           </div>
         </body>
@@ -157,7 +157,7 @@ export const emailTemplates = {
         <body>
           <div class="container">
             <div class="header">
-              <h1>✨ Setu AI</h1>
+              <h1>✨ TrustFirst</h1>
               <p>Trust & Transparency in Informal Finance</p>
             </div>
             <div class="content">
@@ -175,7 +175,7 @@ export const emailTemplates = {
               </div>
             </div>
             <div class="footer">
-              <p>© 2026 Setu AI. Building trust, one agreement at a time.</p>
+              <p>© 2026 TrustFirst. Building trust, one agreement at a time.</p>
             </div>
           </div>
         </body>
@@ -204,7 +204,7 @@ export const emailTemplates = {
           <div class="container">
             <div class="header">
               <h1>⏰ Payment Reminder</h1>
-              <p>Setu AI</p>
+              <p>TrustFirst</p>
             </div>
             <div class="content">
               <h2>Hi ${borrowerName},</h2>
@@ -226,7 +226,7 @@ export const emailTemplates = {
               </div>
             </div>
             <div class="footer">
-              <p>© 2026 Setu AI. Building trust, one agreement at a time.</p>
+              <p>© 2026 TrustFirst. Building trust, one agreement at a time.</p>
             </div>
           </div>
         </body>

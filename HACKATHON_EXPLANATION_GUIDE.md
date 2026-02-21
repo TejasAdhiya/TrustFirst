@@ -50,7 +50,7 @@ Imagine you lend $500 to your friend or family member. Usually, it's awkward to 
 4. AI sends polite reminders automatically
 5. Trust score keeps everyone accountable
 6. Witness adds extra credibility
-7. Everyone stays friends!
+7. AI Calls on behalf of the money lender asking for money politely
 
 ---
 
