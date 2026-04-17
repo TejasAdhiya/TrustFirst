@@ -16,7 +16,7 @@ import {
   User,
   Phone,
   Calendar,
-  IndianRupee,
+  BadgeDollarSign,
   FileText,
   Users,
 } from "lucide-react"
@@ -350,7 +350,7 @@ export default function CreateAgreementPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="amount" className="flex items-center gap-2">
-                  <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                  <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
                   Amount
                 </Label>
                 <Input

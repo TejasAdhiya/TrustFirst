@@ -1,12 +1,15 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_SERVER_HOST,
-  port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
+  host: 'smtp.gmail.com',
+  port: 587,
   secure: false,
   auth: {
     user: process.env.EMAIL_SERVER_USER,
     pass: process.env.EMAIL_SERVER_PASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
@@ -18,6 +21,16 @@ interface EmailOptions {
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
+    console.log('[Email] Config check:');
+    console.log('[Email] - EMAIL_SERVER_USER:', process.env.EMAIL_SERVER_USER ? 'SET' : 'NOT SET');
+    console.log('[Email] - EMAIL_SERVER_PASSWORD:', process.env.EMAIL_SERVER_PASSWORD ? 'SET' : 'NOT SET');
+    console.log('[Email] - EMAIL_FROM:', process.env.EMAIL_FROM ? 'SET' : 'NOT SET');
+    
+    if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
+      console.error('[Email] Missing credentials!');
+      return { success: false, error: 'Email credentials not configured' };
+    }
+    
     const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to,
@@ -25,11 +38,11 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
       html,
     });
 
-    console.log('Email sent:', info.messageId);
+    console.log('[Email] ✓ Sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Email error:', error);
-    return { success: false, error };
+  } catch (error: any) {
+    console.error('[Email] ✗ Failed:', error.message);
+    return { success: false, error: error.message };
   }
 }
 
@@ -65,7 +78,7 @@ export const emailTemplates = {
               <div class="details">
                 <h3>Agreement Details:</h3>
                 <p><strong>Amount:</strong></p>
-                <div class="amount">₹${amount.toLocaleString('en-IN')}</div>
+                <div class="amount">₩${amount.toLocaleString('ko-KR')}</div>
                 <p><strong>Expected Return Date:</strong> ${new Date(dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
               </div>
 
@@ -215,7 +228,7 @@ export const emailTemplates = {
               </div>
 
               <p><strong>Amount Due:</strong></p>
-              <div class="amount">₹${amount.toLocaleString('en-IN')}</div>
+              <div class="amount">₩${amount.toLocaleString('ko-KR')}</div>
               
               <p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
 

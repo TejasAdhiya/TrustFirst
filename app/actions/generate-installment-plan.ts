@@ -73,7 +73,7 @@ function fixInstallmentDates(plans: InstallmentPlan[], dueDate: string): Install
 
 export async function generateInstallmentPlans(
     amount: number,
-    currency: string = "INR",
+    currency: string = "KRW",
     dueDate: string,
     borrowerName: string = "Borrower"
 ): Promise<{ plans?: InstallmentPlan[]; error?: string }> {
@@ -82,8 +82,14 @@ export async function generateInstallmentPlans(
         return { error: "Gemini API key is not configured environment variable." }
     }
 
-    // Use the premium model
-    const modelName = "gemini-2.5-pro"; // Premium version requested
+    // Try multiple free models in order
+    const freeModels = [
+        "gemini-1.5-flash",      // Most reliable free model
+        "gemini-1.5-flash-8b",   // Faster, lighter version
+        "gemini-2.0-flash-exp"   // Experimental but free
+    ];
+    
+    let modelName = freeModels[0];
 
     // Calculate days until due date
     const today = new Date()
@@ -155,69 +161,122 @@ export async function generateInstallmentPlans(
     } as any
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: schema,
-            temperature: 0.7,
-        }
-    })
 
-    // Retry Logic with Exponential Backoff
-    const retries = 3;
-    let lastError: any = null;
-
-    for (let i = 0; i < retries; i++) {
-        try {
-            console.log(`[GeneratePlans] Attempt ${i + 1}/${retries} with ${modelName}`);
-
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
-
-            console.log(`[GeneratePlans] Success!`);
-
-            try {
-                let plans = JSON.parse(text) as InstallmentPlan[];
-                
-                // Validate that all installment dates are before due date
-                const isValid = validateInstallmentDates(plans, dueDate)
-                
-                if (!isValid) {
-                    console.warn(`[GeneratePlans] AI generated dates beyond due date. Fixing...`)
-                    plans = fixInstallmentDates(plans, dueDate)
-                    console.log(`[GeneratePlans] Dates fixed to respect due date: ${dueDate}`)
-                }
-                
-                return { plans };
-            } catch (parseError) {
-                console.error(`[GeneratePlans] JSON Parse error:`, parseError);
-                throw new Error("Failed to parse AI response as JSON");
+    // Try each free model with retries
+    for (let modelIndex = 0; modelIndex < freeModels.length; modelIndex++) {
+        modelName = freeModels[modelIndex];
+        console.log(`[GeneratePlans] Trying model: ${modelName}`);
+        
+        const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: schema,
+                temperature: 0.7,
             }
+        })
 
-        } catch (error: any) {
-            lastError = error;
-            console.warn(`[GeneratePlans] Attempt ${i + 1} failed: ${error.message}`);
+        // Retry Logic with Exponential Backoff per model
+        const retries = 2;
+        
+        for (let i = 0; i < retries; i++) {
+            try {
+                console.log(`[GeneratePlans] Model ${modelName} - Attempt ${i + 1}/${retries}`);
 
-            // Check if it's a 429 (Too Many Requests) or 503 (Service Unavailable)
-            const isQuotaError = error.message?.includes('429') || error.status === 429;
-            const isServiceError = error.message?.includes('503') || error.status === 503;
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text();
 
-            if ((isQuotaError || isServiceError) && i < retries - 1) {
-                const waitTime = 1000 * (2 ** i); // 1s, 2s, 4s...
-                console.warn(`[GeneratePlans] Retrying in ${waitTime}ms...`);
-                await delay(waitTime);
-            } else {
-                // If it's not a retryable error or we ran out of retries, we stop here (loop continues effectively, but logic dictates we re-throw if critical)
-                // Actually, let's allow the loop to continue if it's a transient error, but break if it's a hard error? 
-                // For simplicity as per user request: "if quota hit, retry".
-                if (!isQuotaError && !isServiceError) {
-                    break; // Don't retry specifically logic errors
+                console.log(`[GeneratePlans] Success with ${modelName}!`);
+
+                try {
+                    let plans = JSON.parse(text) as InstallmentPlan[];
+                    
+                    // Validate that all installment dates are before due date
+                    const isValid = validateInstallmentDates(plans, dueDate)
+                    
+                    if (!isValid) {
+                        console.warn(`[GeneratePlans] AI generated dates beyond due date. Fixing...`)
+                        plans = fixInstallmentDates(plans, dueDate)
+                        console.log(`[GeneratePlans] Dates fixed to respect due date: ${dueDate}`)
+                    }
+                    
+                    return { plans };
+                } catch (parseError) {
+                    console.error(`[GeneratePlans] JSON Parse error:`, parseError);
+                    throw new Error("Failed to parse AI response as JSON");
+                }
+
+            } catch (error: any) {
+                console.warn(`[GeneratePlans] ${modelName} attempt ${i + 1} failed: ${error.message}`);
+
+                // Check if it's a 429 (Too Many Requests) or 503 (Service Unavailable)
+                const isQuotaError = error.message?.includes('429') || error.status === 429;
+                const isServiceError = error.message?.includes('503') || error.status === 503;
+
+                if ((isQuotaError || isServiceError) && i < retries - 1) {
+                    const waitTime = 500 * (2 ** i); // 500ms, 1s
+                    console.warn(`[GeneratePlans] Retrying ${modelName} in ${waitTime}ms...`);
+                    await delay(waitTime);
+                } else if (isQuotaError && modelIndex < freeModels.length - 1) {
+                    console.warn(`[GeneratePlans] ${modelName} quota exceeded, trying next model...`);
+                    break; // Try next model
+                } else if (!isQuotaError && !isServiceError) {
+                    break; // Don't retry logic errors
                 }
             }
         }
     }
 
-    return { error: `Unable to generate plans. (Last Error: ${lastError?.message || 'Unknown'})` }
+    // All models failed - use intelligent fallback
+    console.log('[GeneratePlans] All models exhausted - generating intelligent fallback plans');
+    const fallbackPlans = generateSamplePlans(amount, currency, dueDate, daysUntilDue, monthsUntilDue);
+    return { plans: fallbackPlans };
+}
+
+// Sample fallback plans
+function generateSamplePlans(amount: number, currency: string, dueDate: string, daysUntilDue: number, monthsUntilDue: number): InstallmentPlan[] {
+    const dueDateObj = new Date(dueDate);
+    const plans: InstallmentPlan[] = [];
+    
+    const planConfigs = [
+        { name: 'Quick Payoff', description: 'Fast repayment with fewer installments', months: Math.max(2, Math.ceil(monthsUntilDue * 0.4)) },
+        { name: 'Balanced Plan', description: 'Moderate payments over time', months: Math.max(3, Math.ceil(monthsUntilDue * 0.7)) },
+        { name: 'Flexible Plan', description: 'Smaller payments spread longer', months: Math.max(4, monthsUntilDue) }
+    ];
+    
+    for (const config of planConfigs) {
+        const months = Math.max(1, Math.min(config.months, Math.max(1, monthsUntilDue)));
+        const amountPerMonth = Math.round(amount / months);
+        
+        const installments: Installment[] = [];
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() + 7); // Start 7 days from now
+        
+        for (let i = 0; i < months; i++) {
+            const instDate = new Date(startDate);
+            instDate.setMonth(instDate.getMonth() + i);
+            
+            // Ensure date doesn't exceed due date
+            if (instDate > dueDateObj) {
+                instDate.setTime(dueDateObj.getTime());
+            }
+            
+            installments.push({
+                date: instDate.toISOString().split('T')[0],
+                amount: i === months - 1 ? amount - (amountPerMonth * (months - 1)) : amountPerMonth,
+                note: `Installment ${i + 1} of ${months}`
+            });
+        }
+        
+        plans.push({
+            planName: config.name,
+            description: config.description,
+            durationMonths: installments.length,
+            totalAmount: amount,
+            installments
+        });
+    }
+    
+    return plans;
 }

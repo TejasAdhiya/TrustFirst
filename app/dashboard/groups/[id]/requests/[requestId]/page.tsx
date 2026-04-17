@@ -105,7 +105,7 @@ export default function MoneyRequestDetailPage({
     }
 
     if (amount > moneyRequest.amountRemaining) {
-      alert(`Cannot contribute more than ₹${moneyRequest.amountRemaining}`)
+      alert(`Cannot contribute more than ₩${moneyRequest.amountRemaining}`)
       return
     }
 
@@ -196,7 +196,7 @@ export default function MoneyRequestDetailPage({
           </p>
         </div>
         <div className="text-2xl font-bold text-orange">
-          ₹{moneyRequest.amount.toLocaleString()}
+          ₩{moneyRequest.amount.toLocaleString()}
         </div>
       </div>
 
@@ -221,13 +221,13 @@ export default function MoneyRequestDetailPage({
           <div>
             <div className="text-sm text-muted-foreground mb-1">Received</div>
             <div className="text-xl font-bold text-primary">
-              ₹{moneyRequest.amountReceived.toLocaleString()}
+              ₩{moneyRequest.amountReceived.toLocaleString()}
             </div>
           </div>
           <div>
             <div className="text-sm text-muted-foreground mb-1">Remaining</div>
             <div className="text-xl font-bold text-orange">
-              ₹{moneyRequest.amountRemaining.toLocaleString()}
+              ₩{moneyRequest.amountRemaining.toLocaleString()}
             </div>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function MoneyRequestDetailPage({
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="contribution">Amount (₹)</Label>
+                <Label htmlFor="contribution">Amount (₩)</Label>
                 <Input
                   id="contribution"
                   type="number"
@@ -286,7 +286,7 @@ export default function MoneyRequestDetailPage({
                   className="h-12"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Maximum: ₹{moneyRequest.amountRemaining.toLocaleString()}
+                  Maximum: ₩{moneyRequest.amountRemaining.toLocaleString()}
                 </p>
               </div>
               <Button
@@ -359,7 +359,7 @@ export default function MoneyRequestDetailPage({
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-primary">
-                        ₹{contribution.amount.toLocaleString()}
+                        ₩{contribution.amount.toLocaleString()}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         View Agreement →

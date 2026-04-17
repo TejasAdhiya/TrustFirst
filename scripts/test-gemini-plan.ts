@@ -15,7 +15,7 @@ async function testGenerate() {
     const modelName = "gemini-2.5-pro";
     const amount = 5000;
 
-    const prompt = `Generate 3 installment plans for ${amount} INR debt. JSON output only.`;
+    const prompt = `Generate 3 installment plans for ${amount} KRW debt. JSON output only.`;
 
     // Define schema for structured output
     const schema = {

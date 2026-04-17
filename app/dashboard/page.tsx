@@ -204,7 +204,7 @@ export default function DashboardPage() {
               <span>You Lent</span>
             </div>
             <div className="text-2xl font-bold text-primary sm:text-3xl">
-              ₹{totalLent.toLocaleString()}
+              ₩{totalLent.toLocaleString()}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
               {agreements.filter((a) => a.type === "lent" && a.status !== "settled").length} active
@@ -217,7 +217,7 @@ export default function DashboardPage() {
               <span>You Borrowed</span>
             </div>
             <div className="text-2xl font-bold text-orange sm:text-3xl">
-              ₹{totalBorrowed.toLocaleString()}
+              ₩{totalBorrowed.toLocaleString()}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
               {agreements.filter((a) => a.type === "borrowed" && a.status !== "settled").length}{" "}
@@ -232,7 +232,7 @@ export default function DashboardPage() {
               className={`font-semibold ${totalLent - totalBorrowed >= 0 ? "text-primary" : "text-orange"
                 }`}
             >
-              {totalLent - totalBorrowed >= 0 ? "+" : "-"}₹
+              {totalLent - totalBorrowed >= 0 ? "+" : "-"}₩
               {Math.abs(totalLent - totalBorrowed).toLocaleString()}
             </span>
           </div>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
                           className={`text-base font-bold ${isPositive ? "text-primary" : "text-orange"
                             }`}
                         >
-                          {isPositive ? "+" : "-"}₹{Math.abs(netAmount).toLocaleString()}
+                          {isPositive ? "+" : "-"}₩{Math.abs(netAmount).toLocaleString()}
                         </div>
                         <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
                           {isPositive ? "To receive" : "To pay"}
@@ -363,7 +363,7 @@ export default function DashboardPage() {
                                     : "text-orange"
                                     }`}
                                 >
-                                  {agreement.type === "lent" ? "+" : "-"}₹
+                                  {agreement.type === "lent" ? "+" : "-"}₩
                                   {agreement.amount.toLocaleString()}
                                 </div>
                               </div>
@@ -414,7 +414,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-muted-foreground">
-                            ₹{agreement.amount.toLocaleString()}
+                            ₩{agreement.amount.toLocaleString()}
                           </div>
                           <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                             <CheckCircle2 className="h-3 w-3" />

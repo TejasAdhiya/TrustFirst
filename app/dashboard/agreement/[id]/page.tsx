@@ -22,6 +22,7 @@ import {
   ToggleLeft,
   ToggleRight,
   ChevronRight,
+  Shield,
   Check,
   X,
 } from "lucide-react"
@@ -104,7 +105,7 @@ export default function AgreementDetailPage({
     )
     : 0
 
-  const handleStrictModeToggle = async (checked: boolean) => {
+const handleStrictModeToggle = async (checked: boolean) => {
     setIsStrictMode(checked)
     try {
       await fetch(`/api/agreements/${id}`, {
@@ -466,11 +467,11 @@ export default function AgreementDetailPage({
           <p className="text-sm text-muted-foreground">{agreement.purpose || "No purpose specified"}</p>
         </div>
         <div
-          className={`text-2xl font-bold ${isLender ? "text-primary" : "text-orange"
-            }`}
-        >
-          ₹{agreement.amount.toLocaleString()}
-        </div>
+            className={`text-2xl font-bold ${isLender ? "text-primary" : "text-orange"
+              }`}
+          >
+            ₩{agreement.amount.toLocaleString()}
+          </div>
       </div>
 
       {/* Status & Due Date */}
@@ -596,6 +597,113 @@ export default function AgreementDetailPage({
                 Only you can see this setting.
               </p>
             )}
+          </div>
+        </div>
+
+        {/* NEAR AI Analysis Display */}
+        {agreement.aiAnalysis && (
+          <div className="mt-4 pt-4 border-t border-border space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">AI Analysis</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/40">
+                <Shield className="h-4 w-4 text-blue-400" />
+                <span className="text-sm font-semibold text-blue-300">TEE Secured</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Trust:</span>
+                <span className="ml-2 font-semibold">
+                  {agreement.aiAnalysis.trustScore?.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Risk:</span>
+                <span className="ml-2 font-semibold">{agreement.aiAnalysis.riskLevel}%</span>
+              </div>
+            </div>
+            
+            {/* Hardware Acceleration Badge */}
+            <div className="flex items-center justify-center gap-4 pt-2">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>Intel TDX</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>NVIDIA GPU</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>Secure Processing</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Credit Reports - Simple display */}
+      <div className="mb-6 rounded-xl border border-border bg-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Credit Reports</h2>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/40">
+            <Shield className="h-4 w-4 text-blue-400" />
+            <span className="text-sm font-semibold text-blue-300">TEE Secured</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-6">
+          <div className="rounded-lg border border-border bg-secondary/30 p-4">
+            <h3 className="font-medium mb-3">Borrower</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Agreements</span>
+                <span className="font-medium">{agreement.borrowerCreditReport?.totalAgreements ?? 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">On-time Rate</span>
+                <span className="font-medium">{agreement.borrowerCreditReport?.onTimeRate ?? 100}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Risk Level</span>
+                <span className="font-medium">{agreement.aiAnalysis?.riskLevel ?? 0}%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="rounded-lg border border-border bg-secondary/30 p-4">
+            <h3 className="font-medium mb-3">Lender</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Agreements</span>
+                <span className="font-medium">{agreement.lenderCreditReport?.totalAgreements ?? 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Trust Score</span>
+                <span className="font-medium">{agreement.trustScore || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-border">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>Intel TDX</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>NVIDIA GPU</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>Secure Processing</span>
           </div>
         </div>
       </div>
@@ -773,7 +881,9 @@ export default function AgreementDetailPage({
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div className="text-left">
-              <h2 className="font-semibold">TrustFirst AI Mediator</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold">TrustFirst AI Mediator</h2>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Get AI help with sensitive conversations
               </p>

@@ -34,6 +34,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="TrustFirst" className="h-12 w-12 object-contain" />
             <span className="text-xl font-semibold tracking-tight">TrustFirst</span>
+            
           </div>
           <div className="flex items-center gap-3">
             <Link href="/auth/signin">
@@ -99,7 +100,7 @@ export default function LandingPage() {
           <div className="mt-16 flex flex-wrap items-center justify-center gap-8 sm:gap-16">
             {[
               { value: "10K+", label: "Active Users" },
-              { value: "₹2M+", label: "Managed Securely" },
+              { value: "₩2M+", label: "Managed Securely" },
               { value: "99%", label: "Trust Rate" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">

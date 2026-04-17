@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Agreement from '@/models/Agreement';
+import { generateMediationStrategyWithHistory } from '@/lib/near-ai';
 
 // POST - Trigger AI mediator call via Make.com
 export async function POST(
@@ -47,10 +48,13 @@ export async function POST(
 
     // Extract required data
     const { 
+      borrowerId,
       borrowerName, 
       borrowerPhone, 
       borrowerEmail, 
+      lenderId,
       lenderName, 
+      lenderEmail,
       amount, 
       purpose,
       dueDate, 
@@ -93,6 +97,34 @@ export async function POST(
     // Convert booleans to natural language
     const strictModeText = strictMode ? 'strict' : 'flexible';
     const witnessApprovalText = witnessApproved ? 'approved' : 'pending approval';
+
+    // Calculate days overdue
+    const today = new Date();
+    const dueDateObj = new Date(dueDate);
+    const daysOverdue = Math.ceil((today.getTime() - dueDateObj.getTime()) / (1000 * 60 * 60 * 24));
+
+    // NEAR AI Mediation Strategy Generation with History
+    let mediationStrategy = null;
+    try {
+      console.log('[NEAR AI] Generating mediation strategy with history...');
+      mediationStrategy = await generateMediationStrategyWithHistory(
+        borrowerName,
+        borrowerId,
+        borrowerEmail,
+        lenderName,
+        lenderId,
+        lenderEmail,
+        amount,
+        formatDate(dueDate),
+        daysOverdue,
+        status
+      );
+      if (mediationStrategy) {
+        console.log('[NEAR AI] Strategy result:', mediationStrategy);
+      }
+    } catch (aiError: any) {
+      console.error('[NEAR AI] Strategy generation failed:', aiError.message);
+    }
 
     // Generate comprehensive agreement context string
     const agreementContext = `Agreement summary:
@@ -151,6 +183,10 @@ Conversation behavior rules for the AI:
       timestamp: new Date().toISOString(),
       agreementContext,
       triggeredBy,
+      // NEAR AI Mediation Strategy (pass to Make.com/Vapi as context)
+      mediationTone: mediationStrategy?.tone || 'neutral',
+      mediationIntent: mediationStrategy?.messageIntent || 'reminder',
+      mediationOpeningLine: mediationStrategy?.openingLine || '',
     };
 
     // Get webhook URL from environment variables
@@ -159,12 +195,12 @@ Conversation behavior rules for the AI:
     if (!webhookUrl) {
       console.error('MAKE_CALL_WEBHOOK_URL is not configured');
       return NextResponse.json(
-        { error: 'MAKE_CALL_WEBHOOK_URL is not configured' },
+        { error: 'Make.com webhook URL is not configured' },
         { status: 500 }
       );
     }
 
-    console.log('Sending webhook to:', webhookUrl);
+    console.log('Sending data to Make.com webhook:', webhookUrl);
     console.log('Webhook payload:', JSON.stringify(webhookPayload, null, 2));
 
     // Send POST request to Make.com webhook
@@ -178,7 +214,7 @@ Conversation behavior rules for the AI:
         body: JSON.stringify(webhookPayload),
       });
 
-      console.log('Webhook response status:', webhookResponse.status);
+      console.log('Make.com webhook response status:', webhookResponse.status);
       
       if (!webhookResponse.ok) {
         const errorText = await webhookResponse.text();
@@ -187,10 +223,10 @@ Conversation behavior rules for the AI:
         // Just log it and continue
       } else {
         const responseData = await webhookResponse.text();
-        console.log('Webhook success response:', responseData);
+        console.log('Make.com webhook success response:', responseData);
       }
     } catch (fetchError: any) {
-      console.error('Webhook fetch error:', fetchError.message);
+      console.error('Make.com webhook fetch error:', fetchError.message);
       // Don't fail the entire request if webhook fails
       // Just log it and continue
     }
@@ -209,6 +245,16 @@ Conversation behavior rules for the AI:
       content: `AI mediator call initiated by ${triggerText} for borrower ${borrowerName} at ${contactInfo}`,
       timestamp: new Date(),
     });
+
+    // Save NEAR AI mediation strategy to agreement
+    if (mediationStrategy) {
+      agreement.mediationStrategy = {
+        tone: mediationStrategy.tone,
+        messageIntent: mediationStrategy.messageIntent,
+        openingLine: mediationStrategy.openingLine,
+        strategyGeneratedAt: mediationStrategy.strategyGeneratedAt,
+      };
+    }
 
     await agreement.save();
 

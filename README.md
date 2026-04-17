@@ -598,11 +598,11 @@ The AI installment planner uses Google Gemini 2.5 Pro to generate personalized r
 5. **User Selection**: Borrower selects preferred plan
 6. **Proof Tracking**: Each installment tracked with screenshot uploads
 
-**Example Plans for ₹10,000 due in 3 months:**
+**Example Plans for ₩10,000 due in 3 months:**
 
-- **Aggressive**: 2 payments of ₹5,000 each (1 month)
-- **Balanced**: 3 payments of ₹3,333 each (2 months)
-- **Flexible**: 4 payments of ₹2,500 each (3 months)
+- **Aggressive**: 2 payments of ₩5,000 each (1 month)
+- **Balanced**: 3 payments of ₩3,333 each (2 months)
+- **Flexible**: 4 payments of ₩2,500 each (3 months)
 
 ### Group Lending Workflow
 
@@ -614,10 +614,10 @@ The AI installment planner uses Google Gemini 2.5 Pro to generate personalized r
 6. **Individual Tracking**: Each agreement tracked separately
 
 **Example:**
-- Alice requests ₹10,000 from "College Friends" group
-- Bob contributes ₹3,000 → Creates Agreement #1 (Bob → Alice)
-- Charlie contributes ₹4,000 → Creates Agreement #2 (Charlie → Alice)
-- David contributes ₹3,000 → Creates Agreement #3 (David → Alice)
+- Alice requests ₩10,000 from "College Friends" group
+- Bob contributes ₩3,000 → Creates Agreement #1 (Bob → Alice)
+- Charlie contributes ₩4,000 → Creates Agreement #2 (Charlie → Alice)
+- David contributes ₩3,000 → Creates Agreement #3 (David → Alice)
 - Request closes, Alice has 3 separate agreements to repay
 
 ### Trust Score Algorithm

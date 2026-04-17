@@ -54,8 +54,32 @@ export interface IAgreement extends Document {
       uploadedAt?: Date;
     }>;
   };
-  groupContribution?: boolean; // NEW: Mark if this is from group money request
-  moneyRequestId?: string; // NEW: Link to money request
+  groupContribution?: boolean;
+  moneyRequestId?: string;
+  aiAnalysis?: {
+    trustScore: 'high' | 'medium' | 'low';
+    riskLevel: number;
+    suggestedStrategy: string;
+    analyzedAt: Date;
+  };
+  borrowerCreditReport?: {
+    totalAgreements: number;
+    onTimeRate: number;
+    lateCount: number;
+    totalAmount: number;
+    avgAmount: number;
+  };
+  lenderCreditReport?: {
+    totalAgreements: number;
+    avgAmount: number;
+    totalAmount: number;
+  };
+  mediationStrategy?: {
+    tone: 'friendly' | 'neutral' | 'strict';
+    messageIntent: 'reminder' | 'warning' | 'escalation';
+    openingLine: string;
+    strategyGeneratedAt: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -220,6 +244,67 @@ const AgreementSchema: Schema = new Schema(
     },
     moneyRequestId: {
       type: String,
+    },
+    aiAnalysis: {
+      trustScore: {
+        type: String,
+        enum: ['high', 'medium', 'low'],
+      },
+      riskLevel: {
+        type: Number,
+        min: 0,
+        max: 100,
+      },
+      suggestedStrategy: String,
+      analyzedAt: Date,
+    },
+    mediationStrategy: {
+      tone: {
+        type: String,
+        enum: ['friendly', 'neutral', 'strict'],
+      },
+      messageIntent: {
+        type: String,
+        enum: ['reminder', 'warning', 'escalation'],
+      },
+      openingLine: String,
+      strategyGeneratedAt: Date,
+    },
+    borrowerCreditReport: {
+      totalAgreements: {
+        type: Number,
+        default: 0,
+      },
+      onTimeRate: {
+        type: Number,
+        default: 0,
+      },
+      lateCount: {
+        type: Number,
+        default: 0,
+      },
+      totalAmount: {
+        type: Number,
+        default: 0,
+      },
+      avgAmount: {
+        type: Number,
+        default: 0,
+      },
+    },
+    lenderCreditReport: {
+      totalAgreements: {
+        type: Number,
+        default: 0,
+      },
+      avgAmount: {
+        type: Number,
+        default: 0,
+      },
+      totalAmount: {
+        type: Number,
+        default: 0,
+      },
     },
   },
   {

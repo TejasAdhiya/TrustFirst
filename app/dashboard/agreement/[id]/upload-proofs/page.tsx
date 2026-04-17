@@ -186,7 +186,7 @@ export default function UploadProofsPage({
       
       const result = await generateInstallmentPlans(
         agreementData.amount,
-        "INR",
+        "KRW",
         agreementData.dueDate,
         agreementData.borrowerName
       )
@@ -426,7 +426,7 @@ export default function UploadProofsPage({
                 </div>
                 <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                   <DollarSign className="h-3 w-3" />
-                  ₹{installment.amount.toLocaleString()}
+                  ₩{installment.amount.toLocaleString()}
                 </div>
                 {installment.note && (
                   <p className="text-xs text-muted-foreground mt-1">{installment.note}</p>

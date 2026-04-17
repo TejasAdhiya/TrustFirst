@@ -28,7 +28,7 @@ interface InstallmentPlanGeneratorProps {
 
 export function InstallmentPlanGenerator({
     amount,
-    currency = "INR",
+    currency = "KRW",
     dueDate,
     borrowerName,
     agreementId,
@@ -173,7 +173,7 @@ export function InstallmentPlanGenerator({
                                                             </div>
                                                         </div>
                                                         <span className="font-semibold text-primary">
-                                                            {currency === "INR" ? "₹" : currency} {inst.amount.toLocaleString()}
+                                                            {currency === "KRW" ? "₩" : currency} {inst.amount.toLocaleString()}
                                                         </span>
                                                     </div>
                                                 ))}
@@ -182,7 +182,7 @@ export function InstallmentPlanGenerator({
                                         <div className="px-4 py-2 bg-muted/30 border-t border-border mt-auto">
                                             <div className="flex justify-between items-center font-bold">
                                                 <span>Total</span>
-                                                <span>{currency === "INR" ? "₹" : currency} {plan.totalAmount.toLocaleString()}</span>
+                                                <span>{currency === "KRW" ? "₩" : currency} {plan.totalAmount.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     </CardContent>

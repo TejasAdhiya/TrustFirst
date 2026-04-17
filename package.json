@@ -57,6 +57,7 @@
     "ngrok": "^5.0.0-beta.2",
     "nodemailer": "^7.0.13",
     "npx": "^10.2.2",
+    "openai": "^4.104.0",
     "radar-sdk-js": "^4.5.8",
     "react": "19.2.0",
     "react-day-picker": "9.8.0",

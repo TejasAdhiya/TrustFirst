@@ -5,6 +5,7 @@ import User from '@/models/User';
 import Notification from '@/models/Notification';
 import { sendEmail, emailTemplates } from '@/lib/email';
 import { sendNotification } from '@/lib/firebase-admin';
+import { analyzeTrustScoreWithHistory } from '@/lib/near-ai';
 
 // GET all agreements for a user
 export async function GET(request: NextRequest) {
@@ -110,6 +111,28 @@ export async function POST(request: NextRequest) {
       { event: 'Payment Received', date: null, completed: false },
     ];
 
+    // NEAR AI Trust Score Analysis with Full History
+    let aiAnalysis = null;
+    try {
+      console.log('[NEAR AI] Analyzing trust score with borrower history...');
+      aiAnalysis = await analyzeTrustScoreWithHistory(
+        amount,
+        borrowerName,
+        borrowerUser.uid,
+        borrowerEmail,
+        purpose || 'Not specified',
+        dueDate,
+        lenderName,
+        lenderId,
+        lenderEmail
+      );
+      if (aiAnalysis) {
+        console.log('[NEAR AI] Trust analysis result:', aiAnalysis);
+      }
+    } catch (aiError: any) {
+      console.error('[NEAR AI] Trust analysis failed:', aiError.message);
+    }
+
     // Create agreement
     const agreement = await Agreement.create({
       lenderId,
@@ -142,6 +165,29 @@ export async function POST(request: NextRequest) {
           timestamp: new Date(),
         },
       ],
+      aiAnalysis: aiAnalysis || undefined,
+      borrowerCreditReport: aiAnalysis?.borrowerCreditReport ? {
+        totalAgreements: aiAnalysis.borrowerCreditReport.totalAgreements,
+        onTimeRate: aiAnalysis.borrowerCreditReport.onTimeRate,
+        lateCount: aiAnalysis.borrowerCreditReport.lateCount,
+        totalAmount: aiAnalysis.borrowerCreditReport.totalAmount,
+        avgAmount: aiAnalysis.borrowerCreditReport.avgAmount,
+      } : {
+        totalAgreements: 0,
+        onTimeRate: 100,
+        lateCount: 0,
+        totalAmount: 0,
+        avgAmount: 0,
+      },
+      lenderCreditReport: aiAnalysis?.lenderCreditReport ? {
+        totalAgreements: aiAnalysis.lenderCreditReport.totalAgreements,
+        avgAmount: aiAnalysis.lenderCreditReport.avgAmount,
+        totalAmount: aiAnalysis.lenderCreditReport.totalAmount,
+      } : {
+        totalAgreements: 0,
+        avgAmount: 0,
+        totalAmount: 0,
+      },
     });
 
     // Update lender's stats

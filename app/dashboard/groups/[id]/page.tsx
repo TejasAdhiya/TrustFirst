@@ -422,7 +422,7 @@ export default function GroupDetailPage({
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-xs mb-1">
                           <span className="text-muted-foreground">
-                            ₹{request.amountReceived.toLocaleString()} of ₹
+                            ₩{request.amountReceived.toLocaleString()} of ₩
                             {request.amount.toLocaleString()}
                           </span>
                           <span className="text-primary font-medium">
@@ -454,7 +454,7 @@ export default function GroupDetailPage({
                     {/* Amount Remaining */}
                     <div className="text-right">
                       <div className="text-lg font-bold text-orange">
-                        ₹{request.amountRemaining.toLocaleString()}
+                        ₩{request.amountRemaining.toLocaleString()}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         remaining
@@ -499,7 +499,7 @@ export default function GroupDetailPage({
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-muted-foreground">
-                        ₹{request.amount.toLocaleString()}
+                        ₩{request.amount.toLocaleString()}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         Fulfilled
