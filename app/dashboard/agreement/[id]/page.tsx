@@ -22,7 +22,6 @@ import {
   ToggleLeft,
   ToggleRight,
   ChevronRight,
-  Shield,
   Check,
   X,
 } from "lucide-react"
@@ -608,7 +607,7 @@ const handleStrictModeToggle = async (checked: boolean) => {
                 <span className="text-sm font-medium">AI Analysis</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/40">
-                <Shield className="h-4 w-4 text-blue-400" />
+                <Sparkles className="h-4 w-4 text-blue-400" />
                 <span className="text-sm font-semibold text-blue-300">TEE Secured</span>
               </div>
             </div>
@@ -649,63 +648,6 @@ const handleStrictModeToggle = async (checked: boolean) => {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Credit Reports - Simple display */}
-      <div className="mb-6 rounded-xl border border-border bg-card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Credit Reports</h2>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/40">
-            <Shield className="h-4 w-4 text-blue-400" />
-            <span className="text-sm font-semibold text-blue-300">TEE Secured</span>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-6">
-          <div className="rounded-lg border border-border bg-secondary/30 p-4">
-            <h3 className="font-medium mb-3">Borrower</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Agreements</span>
-                <span className="font-medium">{agreement.borrowerCreditReport?.totalAgreements ?? 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">On-time Rate</span>
-                <span className="font-medium">{agreement.borrowerCreditReport?.onTimeRate ?? 100}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Risk Level</span>
-                <span className="font-medium">{agreement.aiAnalysis?.riskLevel ?? 0}%</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="rounded-lg border border-border bg-secondary/30 p-4">
-            <h3 className="font-medium mb-3">Lender</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Agreements</span>
-                <span className="font-medium">{agreement.lenderCreditReport?.totalAgreements ?? 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Trust Score</span>
-                <span className="font-medium">{agreement.trustScore || 0}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-border">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>Intel TDX</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>NVIDIA GPU</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>Secure Processing</span>
-          </div>
-        </div>
       </div>
 
       {/* Timeline */}
@@ -761,6 +703,28 @@ const handleStrictModeToggle = async (checked: boolean) => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Payment Actions</h2>
           <Sparkles className="h-5 w-5 text-primary" />
+        </div>
+
+        {/* AI Negotiation Chat - Available to both parties */}
+        <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-purple-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-sm mb-1">AI Negotiation Assistant</h3>
+              <p className="text-xs text-muted-foreground">
+                Chat with AI to negotiate terms, extend deadlines, or create custom payment plans
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => router.push(`/dashboard/agreement/${id}/negotiate`)}
+            className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            Start AI Negotiation
+          </Button>
         </div>
 
         {isLender && (

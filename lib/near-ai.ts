@@ -19,6 +19,17 @@ export interface TrustScoreAnalysis {
     avgAmount: number;
     totalAmount: number;
   };
+  // NEW: Explainable AI
+  confidence?: number;
+  reasoning?: string[];
+  processingTimeMs?: number;
+  modelUsed?: string;
+  dataPoints?: {
+    paymentHistory: number;
+    amountRisk: number;
+    witnessInvolvement: number;
+    trustScoreWeight: number;
+  };
 }
 
 export interface MediationStrategy {
@@ -193,21 +204,50 @@ Based on this comprehensive data:
 4. If borrower has witness involvement history, LOWER RISK
 5. If lender has good track record, MORE LIKELY to honor agreement
 
-Respond with ONLY a JSON object:
+Respond with ONLY a JSON object with EXPLAINABLE reasoning:
 {
   "trustScore": "high" | "medium" | "low",
   "riskLevel": number (0-100),
-  "suggestedStrategy": "string describing recommended approach"
+  "suggestedStrategy": "string describing recommended approach",
+  "confidence": number (0-1, how confident you are),
+  "reasoning": ["reason 1", "reason 2", "reason 3"],
+  "dataPoints": {
+    "paymentHistory": number (0-100, weight of payment history),
+    "amountRisk": number (0-100, risk from amount),
+    "witnessInvolvement": number (0-100, trust from witnesses),
+    "trustScoreWeight": number (0-100, weight of existing trust score)
+  }
 }
 
-Example: {"trustScore": "medium", "riskLevel": 45, "suggestedStrategy": "Recommend installment plan with semi-monthly payments"}`;
+Example: {
+  "trustScore": "medium", 
+  "riskLevel": 45, 
+  "suggestedStrategy": "Recommend installment plan with semi-monthly payments",
+  "confidence": 0.85,
+  "reasoning": [
+    "Borrower has 66% on-time rate (moderate reliability)",
+    "Amount is 1.5x their average (elevated risk)",
+    "Has witness involvement in 2 past agreements (trust factor)"
+  ],
+  "dataPoints": {
+    "paymentHistory": 66,
+    "amountRisk": 35,
+    "witnessInvolvement": 20,
+    "trustScoreWeight": 75
+  }
+}`;
 
+    const startTime = Date.now();
+    
     const response = await nearAI.chat.completions.create({
-      model: 'deepseek-ai/DeepSeek-V3.1',
+      model: 'Qwen/Qwen3-30B-A3B-Instruct-2507',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 600,
+      max_tokens: 800,
     });
+
+    const endTime = Date.now();
+    const processingTime = endTime - startTime;
 
     const content = response.choices[0]?.message?.content?.trim();
     if (!content) {
@@ -217,11 +257,23 @@ Example: {"trustScore": "medium", "riskLevel": 45, "suggestedStrategy": "Recomme
 
     const parsed = JSON.parse(content);
     
+    console.log('[NEAR AI] Analysis complete:', {
+      trustScore: parsed.trustScore,
+      riskLevel: parsed.riskLevel,
+      confidence: parsed.confidence,
+      processingTime: `${processingTime}ms`,
+    });
+    
     return {
       trustScore: parsed.trustScore || 'medium',
       riskLevel: parsed.riskLevel || 50,
       suggestedStrategy: parsed.suggestedStrategy || 'Standard repayment terms',
       analyzedAt: new Date(),
+      confidence: parsed.confidence || 0.5,
+      reasoning: parsed.reasoning || [],
+      processingTimeMs: processingTime,
+      modelUsed: 'Qwen/Qwen3-30B-A3B-Instruct-2507',
+      dataPoints: parsed.dataPoints,
       borrowerCreditReport: borrowerHistory ? {
         totalAgreements: borrowerHistory.totalAgreements,
         onTimeRate: borrowerHistory.onTimeRate,
@@ -401,7 +453,7 @@ Respond with ONLY JSON:
 }`;
 
     const response = await nearAI.chat.completions.create({
-      model: 'deepseek-ai/DeepSeek-V3.1',
+      model: 'Qwen/Qwen3-30B-A3B-Instruct-2507',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 500,
