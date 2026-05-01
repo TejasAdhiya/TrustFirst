@@ -772,12 +772,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 👥 Team
-
-- **Developer**: Shardul Narvekar
-- **Email**: jeelnandha52@gmail.com
-
----
 
 ## 🙏 Acknowledgments
 
@@ -791,11 +785,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📞 Support
-
-For support, email jeelnandha52@gmail.com or open an issue on GitHub.
-
----
 
 <div align="center">
 
