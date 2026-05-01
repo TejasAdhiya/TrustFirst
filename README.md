@@ -1,15 +1,15 @@
-# 🤝 Setu AI - Trust-Based P2P Lending Platform
+# 🤝 TrustFirst - Web3-Powered P2P Lending Platform
 
 <div align="center">
 
-![Setu AI](https://img.shields.io/badge/Setu-AI%20Powered-blue?style=for-the-badge)
+![TrustFirst](https://img.shields.io/badge/TrustFirst-NEAR%20Blockchain-blue?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
-![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?style=for-the-badge&logo=mongodb)
+![NEAR AI](https://img.shields.io/badge/NEAR-AI%20Cloud-green?style=for-the-badge)
 
-**Digitizing informal money lending between friends and family with AI-powered features**
+**Blockchain-powered informal lending with AI mediation and TEE security**
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Documentation](#-documentation)
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Web3 Integration](#-web3-integration)
 
 </div>
 
@@ -19,6 +19,7 @@
 
 - [Overview](#-overview)
 - [Key Features](#-key-features)
+- [Web3 Integration](#-web3-integration)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
@@ -34,7 +35,7 @@
 
 ## 🌟 Overview
 
-**Setu AI** is a modern peer-to-peer lending platform that brings structure and accountability to informal money lending between friends, family, and colleagues. Built with cutting-edge AI technologies, Setu transforms casual lending into a professional, trackable, and trust-based experience.
+**TrustFirst** is a Web3-powered peer-to-peer lending platform that brings transparency and accountability to informal money lending. Built on NEAR blockchain with AI-powered mediation, TrustFirst transforms casual lending into a secure, trackable, and trust-based experience.
 
 ### The Problem
 - Awkward money conversations between friends/family
@@ -42,23 +43,46 @@
 - Lack of documentation for informal loans
 - No structured repayment plans
 - Difficulty tracking multiple small loans
+- No privacy in financial negotiations
 
 ### The Solution
-Setu AI provides:
-- ✅ Digital agreements with trust scores
+TrustFirst provides:
+- ✅ **NEAR Blockchain** for transparent, immutable agreements
+- ✅ **NEAR AI Cloud** with TEE security for private AI negotiations
 - ✅ AI-generated personalized repayment plans
 - ✅ Automated reminders via email and AI voice calls
 - ✅ Group lending for community support
 - ✅ Payment proof tracking with screenshots
 - ✅ Witness verification for added credibility
 - ✅ Real-time location tracking for security
+- ✅ Privacy-preserving AI chat for deadline extensions
 
 ---
 
 ## 🎯 Key Features
 
-### 1. **AI-Powered Installment Planning** 🤖
-- **Google Gemini 2.5 Pro** integration
+### 1. **NEAR Blockchain Integration** ⛓️
+- **Immutable Agreements**: All lending agreements stored on NEAR blockchain
+- **Transparent History**: Complete audit trail of all transactions
+- **Smart Contracts**: Automated agreement enforcement
+- **Decentralized Trust**: No central authority needed
+- **On-chain Verification**: Cryptographic proof of agreements
+
+### 2. **NEAR AI Cloud with TEE Security** 🔒
+- **Trusted Execution Environment (TEE)**: All AI processing happens in secure enclaves
+- **Privacy-Preserving AI**: Conversations encrypted and private
+- **Claude Sonnet 4.5**: Powered by Anthropic's latest model via NEAR AI
+- **AI Negotiation Chat**: Borrowers can chat with AI to:
+  - Extend deadlines (using buffer days)
+  - Get payment advice
+  - Check payment history
+  - Request installment plans
+- **Role-Aware AI**: Different capabilities for borrowers vs lenders
+- **Context-Aware**: AI knows agreement details, buffer days, payment history
+- **Real-time Updates**: Agreement updates instantly after AI approval
+
+### 3. **AI-Powered Installment Planning** 🤖
+- **Google Gemini 2.5 Flash**: Multiple free models with fallback
 - Generates 3 personalized repayment plans:
   - **Aggressive**: Fast repayment, higher installments
   - **Balanced**: Moderate payments over reasonable time
@@ -66,80 +90,93 @@ Setu AI provides:
 - Smart date validation ensures all payments before due date
 - Considers borrower context and financial capacity
 
-### 2. **Conversational AI Calling** 📞
+### 4. **Conversational AI Calling** 📞
 - **VAPI AI** integration for natural voice calls
 - Automated payment reminders via phone
 - Professional, empathetic conversation flow
 - One-click call initiation by lenders
 - Real-time call status tracking
+- **Make.com** automation for call workflows
 
-### 3. **Group Lending (Many-to-One)** 👥
+### 5. **Group Lending (Many-to-One)** 👥
 - Create groups of friends, family, or colleagues
 - Request money from entire group
 - Multiple people contribute partial amounts
 - Each contribution creates individual 1-on-1 agreement
 - Request auto-closes when full amount received
-- Admin controls for group creators:
-  - Add/remove members
-  - Delete groups
-  - Manage permissions
+- Admin controls for group creators
 
-### 4. **Dynamic Trust Score System** 📊
+### 6. **Dynamic Trust Score System** 📊
 - Real-time trust score (0-100) for each agreement
 - Score decreases if payments are late
 - **Strict Mode** option for faster penalties
-- Visual indicators with color coding:
-  - 🟢 Green (80-100): Excellent
-  - 🟡 Yellow (60-79): Good
-  - 🟠 Orange (40-59): Fair
-  - 🔴 Red (0-39): Poor
+- Visual indicators with color coding
+- Blockchain-verified payment history
 
-### 5. **Witness Verification** ✅
+### 7. **Witness Verification** ✅
 - Add third-party witness to agreements
 - Email-based approval workflow
 - Witness can approve/reject agreements
 - Adds legal credibility to informal lending
 - Notification system for all parties
 
-### 6. **Real-Time Location Tracking** 📍
+### 8. **Real-Time Location Tracking** 📍
 - **Radar.io** integration
 - Track borrower's live location (with consent)
 - Location history with timestamps
 - Address geocoding (city, state, country)
 - Privacy-focused implementation
 
-### 7. **Payment Proof Management** 📸
+### 9. **Payment Proof Management** �
 - Upload multiple payment screenshots
 - Grid-based UI for organized tracking
 - Individual proof for each installment
 - View/remove uploaded proofs
 - Progress tracking (X/Y proofs uploaded)
-- File validation (image only, max 5MB)
 
-### 8. **Smart Email Notifications** 📧
-- Automated email workflows:
-  - Agreement creation confirmations
-  - Witness approval requests
-  - Payment due date reminders
-  - Settlement notifications
+### 10. **Smart Email Notifications** �
+- Automated email workflows
 - Professional HTML email templates
-- Clickable buttons with ngrok URLs
+- Clickable buttons with live URLs
 - Real-time delivery status
 
-### 9. **Secure Authentication** 🔐
-- **Firebase Authentication**
-- Email/password login
-- User profile management
-- Role-based access control (lender/borrower/witness)
-- Session management
+---
 
-### 10. **Comprehensive Dashboard** 📱
-- Clean, modern dark-themed UI
-- Real-time updates and notifications
-- Mobile-responsive design
-- Intuitive navigation
-- Visual progress indicators
-- Color-coded status badges
+## 🌐 Web3 Integration
+
+### NEAR Blockchain
+TrustFirst leverages NEAR Protocol for:
+
+1. **Agreement Storage**: All agreements stored on-chain
+2. **Immutable Records**: Cannot be altered or deleted
+3. **Transparent History**: Public verification of agreements
+4. **Smart Contracts**: Automated enforcement of terms
+5. **Decentralized Trust**: No central authority needed
+
+### NEAR AI Cloud
+TrustFirst uses NEAR AI Cloud for secure AI processing:
+
+1. **TEE Security**: Trusted Execution Environment ensures privacy
+2. **Encrypted Processing**: All AI conversations are encrypted
+3. **No Data Leakage**: Even platform operators can't see raw data
+4. **Claude Sonnet 4.5**: Latest AI model via NEAR AI
+5. **Real-time Negotiation**: Instant deadline extensions and advice
+
+**Test NEAR AI Integration:**
+```
+GET /api/test-near-ai
+```
+Returns:
+- Model: anthropic/claude-sonnet-4-5
+- Response time
+- Token usage
+- Actual AI response
+
+### Privacy Features
+- **TEE-Secured Chats**: All negotiations happen in secure enclaves
+- **End-to-End Encryption**: Messages encrypted in transit
+- **Zero-Knowledge Proofs**: Verify without revealing data
+- **Decentralized Storage**: No single point of failure
 
 ---
 
@@ -157,8 +194,14 @@ Setu AI provides:
 - **MongoDB Atlas** - Cloud NoSQL database
 - **Mongoose** - MongoDB ODM
 
+### Web3 & Blockchain
+- **NEAR Protocol** - Layer-1 blockchain for agreements
+- **NEAR AI Cloud** - TEE-secured AI processing
+- **Claude Sonnet 4.5** - AI model via NEAR AI
+
 ### AI & Automation
-- **Google Gemini 2.5 Pro** - AI installment planning
+- **NEAR AI Cloud** - Privacy-preserving AI negotiations
+- **Google Gemini 2.5 Flash** - AI installment planning
 - **VAPI AI** - Conversational voice calling
 - **Make.com** - Webhook automation workflows
 
@@ -187,25 +230,26 @@ Setu AI provides:
 ┌─────────────────────────────────────────────────────────────┐
 │                    Next.js API Routes                        │
 │              (Serverless Functions)                          │
-└─┬───────────┬──────────┬──────────┬──────────┬─────────────┘
-  │           │          │          │          │
-  ▼           ▼          ▼          ▼          ▼
-┌────┐   ┌────────┐  ┌──────┐  ┌──────┐  ┌────────┐
-│ DB │   │Firebase│  │Gemini│  │VAPI  │  │Radar.io│
-│    │   │  Auth  │  │  AI  │  │  AI  │  │Location│
-└────┘   └────────┘  └──────┘  └──────┘  └────────┘
-MongoDB                                    
+└─┬───────┬──────┬──────────┬──────────┬──────────┬──────────┘
+  │       │      │          │          │          │
+  ▼       ▼      ▼          ▼          ▼          ▼
+┌────┐ ┌────┐ ┌──────┐  ┌──────┐  ┌──────┐  ┌────────┐
+│ DB │ │NEAR│ │NEAR  │  │Gemini│  │VAPI  │  │Radar.io│
+│    │ │ AI │ │Block │  │  AI  │  │  AI  │  │Location│
+└────┘ └────┘ └──────┘  └──────┘  └──────┘  └────────┘
+MongoDB  TEE   Chain                                    
 ```
 
 ### Data Flow
 
 1. **User Authentication**: Firebase handles login/signup
-2. **Agreement Creation**: Stored in MongoDB with Mongoose
-3. **AI Planning**: Gemini generates installment plans
-4. **Notifications**: Nodemailer sends emails
-5. **Voice Calls**: VAPI AI makes conversational calls
-6. **Location**: Radar.io tracks borrower location
-7. **File Storage**: Local filesystem for payment proofs
+2. **Agreement Creation**: Stored in MongoDB + NEAR blockchain
+3. **AI Negotiation**: NEAR AI Cloud with TEE security
+4. **AI Planning**: Gemini generates installment plans
+5. **Notifications**: Nodemailer sends emails
+6. **Voice Calls**: VAPI AI makes conversational calls
+7. **Location**: Radar.io tracks borrower location
+8. **File Storage**: Local filesystem for payment proofs
 
 ---
 
@@ -294,6 +338,10 @@ NEXT_PUBLIC_APP_URL=https://your-ngrok-url.ngrok-free.dev
 # AI Configuration
 GEMINI_API_KEY=your_gemini_api_key
 
+# NEAR AI Cloud (TEE-based private inference)
+NEAR_AI_API_KEY=your_near_ai_api_key
+NEAR_AI_BASE_URL=https://cloud-api.near.ai/v1
+
 # Make.com Webhook (for VAPI AI calls)
 MAKE_CALL_WEBHOOK_URL=https://hook.us2.make.com/your_webhook_id
 
@@ -310,9 +358,10 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 1. **Firebase**: https://console.firebase.google.com/
 2. **MongoDB Atlas**: https://www.mongodb.com/cloud/atlas
 3. **Google Gemini**: https://makersuite.google.com/app/apikey
-4. **Radar.io**: https://radar.com/dashboard
-5. **Make.com**: https://www.make.com/
-6. **Gmail App Password**: https://myaccount.google.com/apppasswords
+4. **NEAR AI Cloud**: https://cloud.near.ai/
+5. **Radar.io**: https://radar.com/dashboard
+6. **Make.com**: https://www.make.com/
+7. **Gmail App Password**: https://myaccount.google.com/apppasswords
 
 ---
 
@@ -328,6 +377,8 @@ setu-ai/
 │   │   │       ├── approve-witness/
 │   │   │       ├── send-reminder/
 │   │   │       ├── ask-ai-call/
+│   │   │       ├── negotiate/      # NEAR AI chat
+│   │   │       ├── extend-due-date/
 │   │   │       ├── save-plan/
 │   │   │       ├── upload-installment-proof/
 │   │   │       └── remove-installment-proof/
@@ -346,6 +397,7 @@ setu-ai/
 │   │   ├── page.tsx              # Dashboard home
 │   │   ├── layout.tsx            # Dashboard layout
 │   │   ├── agreement/[id]/       # Agreement details
+│   │   │   ├── negotiate/        # NEAR AI chat
 │   │   │   └── upload-proofs/    # Payment proof upload
 │   │   ├── groups/               # Group pages
 │   │   │   ├── page.tsx
@@ -371,6 +423,7 @@ setu-ai/
 ├── lib/                          # Libraries & utilities
 │   ├── mongodb.ts                # MongoDB connection
 │   ├── email.ts                  # Email service
+│   ├── near-ai.ts                # NEAR AI integration
 │   └── utils.ts                  # Helper functions
 ├── models/                       # Mongoose models
 │   ├── Agreement.ts
